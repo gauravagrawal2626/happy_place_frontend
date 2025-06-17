@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../auth/bloc/linkedin_auth_bloc.dart';
 import '../../auth/bloc/linkedin_auth_event.dart';
 import '../../auth/bloc/linkedin_auth_state.dart';
 import '../../../utils/reddit_auth_helper.dart';
 import '../../../utils/reddit_interest_analyzer.dart';
+import '../widgets/cv_uploader.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -187,6 +189,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     '${state.user.firstName} ${state.user.lastName}',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
+                  if (state.user.profileUrl != null) ...[
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () async {
+                        final url = Uri.parse(state.user.profileUrl!);
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url);
+                        }
+                      },
+                      child: Text(
+                        'LinkedIn Profile',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   const Text(
                     'Reddit Connection',
@@ -279,6 +299,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed: _connectToReddit,
                       child: const Text('Connect to Reddit'),
                     ),
+                  const SizedBox(height: 32),
+                  const CVUploader(),
                 ],
               ),
             );
