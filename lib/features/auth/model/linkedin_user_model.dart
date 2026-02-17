@@ -5,6 +5,7 @@ class AppLinkedInUser {
   final String? lastName;
   final String? email;
   final String? profilePicture;
+  final String? sub;
   final LinkedInTokenObject? accessToken;
 
   AppLinkedInUser({
@@ -12,6 +13,7 @@ class AppLinkedInUser {
     this.lastName,
     this.email,
     this.profilePicture,
+    this.sub,
     this.accessToken,
   });
 
@@ -19,11 +21,13 @@ class AppLinkedInUser {
 
   factory AppLinkedInUser.fromLinkedInUser(UserSucceededAction userSucceededAction) {
     final user = userSucceededAction.user;
+    
     return AppLinkedInUser(
       firstName: user.givenName,
       lastName: user.familyName,
       email: user.email,
       profilePicture: user.picture,
+      sub: user.sub,
       accessToken: user.token,
     );
   }

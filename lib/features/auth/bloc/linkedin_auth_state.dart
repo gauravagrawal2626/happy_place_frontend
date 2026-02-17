@@ -1,4 +1,5 @@
 import '../model/linkedin_user_model.dart';
+import '../model/auth_response.dart';
 
 abstract class LinkedInAuthState {}
 
@@ -8,7 +9,12 @@ class LinkedInAuthLoading extends LinkedInAuthState {}
 
 class LinkedInAuthSuccess extends LinkedInAuthState {
   final AppLinkedInUser user;
-  LinkedInAuthSuccess({required this.user});
+  final AuthResponse authResponse; // JWT token + user info from backend
+  
+  LinkedInAuthSuccess({
+    required this.user,
+    required this.authResponse,
+  });
 }
 
 class LinkedInAuthFailure extends LinkedInAuthState {

@@ -62,13 +62,36 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Allow HTTP connections to localhost for local development -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>This app needs access to documents to upload your CV</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to photos to upload your CV</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs your location to find flats near you</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs your location to find flats near you</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>
 </plist>
