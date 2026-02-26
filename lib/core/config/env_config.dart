@@ -19,4 +19,9 @@ class EnvConfig {
         return null;
     }
   }
+
+  /// LinkedIn OAuth (from .env). Required for LinkedIn login.
+  static String get linkedInClientId => _trimmed(dotenv.maybeGet('LINKEDIN_CLIENT_ID')) ?? '';
+  static String get linkedInClientSecret => _trimmed(dotenv.maybeGet('LINKEDIN_CLIENT_SECRET')) ?? '';
+  static String get linkedInRedirectUri => _trimmed(dotenv.maybeGet('LINKEDIN_REDIRECT_URI')) ?? '';
 }
