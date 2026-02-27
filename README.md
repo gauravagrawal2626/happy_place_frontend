@@ -8,10 +8,26 @@ A Flutter application for finding compatible flatmates based on lifestyle prefer
 
 Copy `.env.example` to `.env` in the project root and set values as needed. **Do not commit `.env`** (it is gitignored).
 
-| Variable | Description |
-|----------|-------------|
-| `PLACES_API_KEY` | Google Places API key for **iOS** (optional). If unset on iOS, location autocomplete uses Nominatim (OSM). |
-| `PLACES_API_KEY_ANDROID` | Google Places API key for **Android** (optional). If unset on Android, location autocomplete uses Nominatim. Add when you have an Android-restricted key. |
+| Variable                 | Required | Description |
+|--------------------------|----------|-------------|
+| `PLACES_API_KEY`         | No       | Google Places API key for **iOS**. If unset, location autocomplete falls back to Nominatim (OSM). |
+| `PLACES_API_KEY_ANDROID` | No       | Google Places API key for **Android**. If unset, Android also uses Nominatim. Recommended when you have an Android-restricted key. |
+| `LINKEDIN_CLIENT_ID`     | Yes\*    | LinkedIn OAuth Client ID from `https://www.linkedin.com/developers/apps`. Used by the `linkedin_login` package. |
+| `LINKEDIN_CLIENT_SECRET` | Yes\*    | LinkedIn OAuth Client Secret. **Never commit this.** Only stored locally in `.env`. |
+| `LINKEDIN_REDIRECT_URI`  | Yes\*    | Redirect URI configured in the LinkedIn app. Must match the value in LinkedIn’s OAuth 2.0 settings. |
+
+\*Required only if you want LinkedIn login to work in that environment. The app will fail LinkedIn auth if these are missing.
+
+---
+
+## Backend configuration
+
+API calls use the `ApiConfig.baseUrl` in `lib/core/config/api_config.dart`.
+
+- **Dev backend (remote)**: `static const String baseUrl = 'http://13.126.87.95:8000';`
+- **Local backend (example, commented in code)**: `// static const String baseUrl = 'http://127.0.0.1:8000';`
+
+To switch environments, change `baseUrl` and rebuild the app.
 
 ---
 
