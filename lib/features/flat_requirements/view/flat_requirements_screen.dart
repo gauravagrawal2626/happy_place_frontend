@@ -200,81 +200,70 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
   }
 
   Widget _buildMainContent(BuildContext context, FlatLoaded state) {
-    // Debug: Log isLister value
-    print('[FlatRequirementsScreen] _buildMainContent - widget.isLister: ${widget.isLister}, userRole: ${widget.userRole}');
-    
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(), // Go back to previous screen
-        ),
-        title: Text(
-          widget.isLister ? 'Flat Details' : 'Flat Preferences',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          // Progress indicator
-          _buildProgressIndicator(state),
-          
-          // Main content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Location info (if LISTER has DRAFT data)
-                  if (widget.isLister && state.flatId != null)
-                    _buildLocationInfo(state),
-                  
-                  // Form fields
-                  _buildFormFields(context, state),
-                  
-                  // Questions
-                  ..._buildQuestions(context, state),
-                  
-                  // Photo upload (controlled by backend flag)
-                  if (state.showImageUpload) ...[
+    return AppScaffold(
+      useSafeArea: false,
+      child: SafeArea(
+        child: Column(
+          children: [
+            _buildProgressIndicator(state),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    Text(
+                      'Flat requirements',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                      ),
+                    ),
                     const SizedBox(height: 24),
-                    _buildPhotoSection(context, state),
+                    _buildFormFields(context, state),
+                    ..._buildQuestions(context, state),
+                    if (state.showImageUpload) ...[
+                      const SizedBox(height: 24),
+                      _buildPhotoSection(context, state),
+                    ],
+                    if (state.showDescription) ...[
+                      const SizedBox(height: 24),
+                      _buildDescriptionField(context, state),
+                    ],
+                    const SizedBox(height: 100),
                   ],
-                  
-                  // Description (controlled by backend flag)
-                  if (state.showDescription) ...[
-                    const SizedBox(height: 24),
-                    _buildDescriptionField(context, state),
-                  ],
-                  
-                  const SizedBox(height: 100), // Space for bottom button
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+            _buildSubmitButton(context, state),
+          ],
+        ),
       ),
-      bottomNavigationBar: _buildSubmitButton(context, state),
     );
   }
 
+  bool _isFieldAnswered(dynamic value) {
+    if (value == null) return false;
+    if (value is String) return value.isNotEmpty;
+    if (value is int) return value != 0;
+    if (value is List) return value.isNotEmpty;
+    return true;
+  }
+
   Widget _buildProgressIndicator(FlatLoaded state) {
-    final totalQuestions = state.questions.length;
-    final answeredCount = state.questionAnswers.length;
-    final progress = totalQuestions > 0 ? answeredCount / totalQuestions : 0.0;
+    final formFieldKeys = widget.isLister
+        ? ['flat_size', 'rent', 'security_deposit', 'bedroom_type', 'washroom_type', 'listing_type', 'facilities']
+        : ['preferred_flat_size', 'max_rent', 'max_deposit', 'bedroom_type', 'washroom_type', 'preferred_listing_type', 'required_facilities'];
+
+    final answeredFormFields = formFieldKeys.where((key) => _isFieldAnswered(state.formFields[key])).length;
+    final totalItems = formFieldKeys.length + state.questions.length;
+    final answeredItems = answeredFormFields + state.questionAnswers.length;
+    final progress = totalItems > 0 ? answeredItems / totalItems : 0.0;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      color: AppColors.background.withOpacity(0.1),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -282,7 +271,7 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$answeredCount of $totalQuestions questions answered',
+                '$answeredItems of $totalItems answered',
                 style: TextStyle(
                   color: AppColors.textDark.withOpacity(0.7),
                   fontSize: 12,
@@ -303,8 +292,8 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.grey[300],
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.background),
+              backgroundColor: Colors.white.withOpacity(0.4),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.textDark),
               minHeight: 6,
             ),
           ),
@@ -362,21 +351,19 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Flat Size
-        _buildDropdownField(
+        _buildChipSelector(
           context: context,
-          label: 'Flat Size',
+          label: 'You have/need',
           fieldName: widget.isLister ? 'flat_size' : 'preferred_flat_size',
           value: state.formFields[widget.isLister ? 'flat_size' : 'preferred_flat_size'] as String?,
-          options: ['1RK', '1BHK', '2BHK', '3BHK', '4BHK+'],
+          options: ['2BHK', '3BHK', '4BHK+', 'Villa'],
+          displayLabels: {'2BHK': '2 BHK', '3BHK': '3 BHK', '4BHK+': '4 BHK+', 'Villa': 'Villa'},
         ),
-        
         const SizedBox(height: 20),
-        
-        // Rent/Max Rent slider
         _buildSliderField(
           context: context,
-          label: widget.isLister ? 'Rent (per month)' : 'Max Rent',
+          label: 'Rent/Room',
+          subtitle: 'Inclusive of maintenance etc',
           fieldName: widget.isLister ? 'rent' : 'max_rent',
           value: (state.formFields[widget.isLister ? 'rent' : 'max_rent'] as int?) ?? 0,
           min: 5000,
@@ -384,13 +371,19 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
           divisions: 19,
           prefix: '₹',
         ),
-        
         const SizedBox(height: 20),
-        
-        // Deposit slider
+        _buildChipSelector(
+          context: context,
+          label: 'Type of bedroom',
+          fieldName: 'bedroom_type',
+          value: state.formFields['bedroom_type'] as String?,
+          options: ['master', 'balcony', 'other'],
+          displayLabels: {'master': 'Master Bedroom', 'balcony': 'With Balcony', 'other': 'Other ones'},
+        ),
+        const SizedBox(height: 20),
         _buildSliderField(
           context: context,
-          label: widget.isLister ? 'Security Deposit' : 'Max Deposit',
+          label: 'Deposit/person',
           fieldName: widget.isLister ? 'security_deposit' : 'max_deposit',
           value: (state.formFields[widget.isLister ? 'security_deposit' : 'max_deposit'] as int?) ?? 0,
           min: 0,
@@ -398,34 +391,16 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
           divisions: 50,
           prefix: '₹',
         ),
-        
         const SizedBox(height: 20),
-        
-        // Bedroom Type
-        _buildDropdownField(
+        _buildChipSelector(
           context: context,
-          label: 'Bedroom Type',
-          fieldName: 'bedroom_type',
-          value: state.formFields['bedroom_type'] as String?,
-          options: ['master', 'balcony', 'other'],
-          displayLabels: {'master': 'Master Bedroom', 'balcony': 'With Balcony', 'other': 'Other'},
-        ),
-        
-        const SizedBox(height: 20),
-        
-        // Washroom Type
-        _buildDropdownField(
-          context: context,
-          label: 'Washroom Type',
+          label: 'Type of washroom',
           fieldName: 'washroom_type',
           value: state.formFields['washroom_type'] as String?,
           options: ['attached', 'shared'],
           displayLabels: {'attached': 'Attached', 'shared': 'Shared'},
         ),
-        
         const SizedBox(height: 20),
-        
-        // Listing Type
         _buildDropdownField(
           context: context,
           label: 'Listing Type',
@@ -434,10 +409,7 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
           options: ['SHARED_FLAT', 'ENTIRE_FLAT'],
           displayLabels: {'SHARED_FLAT': 'Shared Flat', 'ENTIRE_FLAT': 'Entire Flat'},
         ),
-        
         const SizedBox(height: 20),
-        
-        // Facilities
         _buildFacilitiesField(context, state),
       ],
     );
@@ -466,7 +438,8 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
+            color: Colors.white.withOpacity(0.85),
+            border: Border.all(color: AppColors.textDark.withOpacity(0.4)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: DropdownButtonHideUnderline(
@@ -492,6 +465,67 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
     );
   }
 
+  Widget _buildChipSelector({
+    required BuildContext context,
+    required String label,
+    required String fieldName,
+    required String? value,
+    required List<String> options,
+    Map<String, String>? displayLabels,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDark,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: options.map((option) {
+            final isSelected = value == option;
+            return GestureDetector(
+              onTap: () {
+                context.read<FlatBloc>().add(
+                  UpdateFormField(fieldName: fieldName, value: option),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.textDark : Colors.white.withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Text(
+                  displayLabels?[option] ?? option,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? Colors.white : AppColors.textDark,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  String _formatNumber(int n, {String? prefix}) {
+    final formatted = n.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+    return '${prefix ?? ''}$formatted';
+  }
+
   Widget _buildSliderField({
     required BuildContext context,
     required String label,
@@ -501,6 +535,7 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
     required int max,
     required int divisions,
     String? prefix,
+    String? subtitle,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,22 +543,36 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textDark.withOpacity(0.6),
+                    ),
+                  ),
+              ],
             ),
-            Text(
-              '${prefix ?? ''}${value.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.background,
+            if (value > 0)
+              Text(
+                _formatNumber(value, prefix: prefix),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDark,
+                ),
               ),
-            ),
           ],
         ),
         Slider(
@@ -531,26 +580,13 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
           min: min.toDouble(),
           max: max.toDouble(),
           divisions: divisions,
-          activeColor: AppColors.background,
-          inactiveColor: AppColors.background.withOpacity(0.2),
+          activeColor: AppColors.textDark,
+          inactiveColor: Colors.white.withOpacity(0.5),
           onChanged: (newValue) {
             context.read<FlatBloc>().add(
               UpdateFormField(fieldName: fieldName, value: newValue.toInt()),
             );
           },
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '${prefix ?? ''}$min',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-            Text(
-              '${prefix ?? ''}$max',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
         ),
       ],
     );
@@ -603,10 +639,10 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.background : Colors.white,
+                  color: isSelected ? AppColors.textDark : Colors.white.withOpacity(0.85),
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: isSelected ? AppColors.background : Colors.grey[300]!,
+                    color: isSelected ? AppColors.textDark : AppColors.textDark.withOpacity(0.3),
                   ),
                 ),
                 child: Row(
@@ -721,14 +757,11 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
             );
           },
           child: Container(
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 72),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.background : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected ? AppColors.background : Colors.grey[300]!,
-                width: 1.5,
-              ),
+              color: isSelected ? AppColors.textDark : Colors.white.withOpacity(0.85),
+              borderRadius: BorderRadius.circular(25),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -742,12 +775,14 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
                   ),
                   const SizedBox(width: 8),
                 ],
-                Text(
-                  option.text,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textDark,
+                Flexible(
+                  child: Text(
+                    option.text,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? Colors.white : AppColors.textDark,
+                    ),
                   ),
                 ),
               ],
@@ -764,21 +799,19 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Flat Photos',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textDark,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Add up to 10 photos of your flat',
-          style: TextStyle(
-            fontSize: 13,
-            color: AppColors.textDark.withOpacity(0.6),
-          ),
+        Row(
+          children: [
+            const Text(
+              'Upload Photos',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.cloud_upload_outlined, size: 22, color: AppColors.textDark),
+          ],
         ),
         const SizedBox(height: 12),
         
@@ -821,72 +854,74 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
 
     return Stack(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 100,
-            height: 100,
-            color: isMockUrl ? AppColors.background.withOpacity(0.2) : Colors.grey[200],
-            child: isMockUrl
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.image, size: 32, color: AppColors.background),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Photo ${index + 1}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.background,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    width: 100,
-                    height: 100,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                  (loadingProgress.expectedTotalBytes ?? 1)
-                              : null,
-                          strokeWidth: 2,
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      final is403 = error.toString().contains('403');
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.cloud_upload_outlined, size: 28, color: Colors.grey[600]),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Photo ${index + 1}',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.textDark, width: 1.5),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10.5),
+            child: Container(
+              width: 100,
+              height: 100,
+              color: isMockUrl ? Colors.white.withOpacity(0.85) : Colors.grey[200],
+              child: isMockUrl
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.image, size: 32, color: AppColors.textDark),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Photo ${index + 1}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.w600,
                             ),
-                            if (is403)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  'Uploaded',
-                                  style: TextStyle(fontSize: 10, color: Colors.grey[500]),
-                                ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      width: 100,
+                      height: 100,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        final is403 = error.toString().contains('403');
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.cloud_upload_outlined, size: 28, color: AppColors.textDark),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Photo ${index + 1}',
+                                style: const TextStyle(fontSize: 12, color: AppColors.textDark),
                               ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                              if (is403)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    'Uploaded',
+                                    style: TextStyle(fontSize: 10, color: AppColors.textDark),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
           ),
         ),
         Positioned(
@@ -913,11 +948,12 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
       width: 100,
       height: 100,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: Colors.white.withOpacity(0.85),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.textDark, width: 1.5),
       ),
       child: const Center(
-        child: CircularProgressIndicator(strokeWidth: 2),
+        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textDark),
       ),
     );
   }
@@ -929,20 +965,20 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
         width: 100,
         height: 100,
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: Colors.white.withOpacity(0.85),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
+          border: Border.all(color: AppColors.textDark, width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_a_photo, color: Colors.grey[600], size: 28),
+            const Icon(Icons.add_a_photo, color: AppColors.textDark, size: 28),
             const SizedBox(height: 4),
-            Text(
+            const Text(
               'Add Photo',
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.grey[600],
+                color: AppColors.textDark,
               ),
             ),
           ],
@@ -1007,17 +1043,19 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
           maxLength: 2000,
           decoration: InputDecoration(
             hintText: 'Describe your flat, amenities, neighborhood...',
+            filled: true,
+            fillColor: Colors.white.withOpacity(0.85),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: const BorderSide(color: AppColors.textDark),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(color: AppColors.textDark.withOpacity(0.4)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.background, width: 2),
+              borderSide: const BorderSide(color: AppColors.textDark, width: 2),
             ),
           ),
           onChanged: (value) {
@@ -1036,44 +1074,55 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
   }
 
   Widget _buildSubmitButton(BuildContext context, FlatLoaded state) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            offset: const Offset(0, -2),
-            blurRadius: 10,
+    final source = widget.isLister ? 'flat-lister' : 'flat-seeker';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                context.read<FlatBloc>().add(
+                  SubmitFlatData(userRole: widget.userRole),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.textDark,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              child: Text(
+                'Save Changes',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => context.go('/finding-matches/$source'),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'Skip',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textDark,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
           ),
         ],
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {
-              context.read<FlatBloc>().add(
-                SubmitFlatData(userRole: widget.userRole),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.textDark,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              widget.isLister ? 'Save Flat Details' : 'Save Preferences',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

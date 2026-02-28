@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/app_scaffold.dart';
-import '../../../shared/widgets/chip_button.dart';
 import '../../../shared/theme/app_colors.dart';
-import '../../../core/network/api_client.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../bloc/location_bloc.dart';
 import '../bloc/location_event.dart';
 import '../bloc/location_state.dart';
-import '../model/location_model.dart';
 
 /// Seeker Location Screen - Phase 4
 /// 
@@ -113,9 +110,8 @@ class _SeekerLocationContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   const Text(
-                    "Let's see if there are people like you within your proximity",
+                    "Let\u2019s see if there are people like you within your proximity",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -124,123 +120,113 @@ class _SeekerLocationContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 40),
-
-                  // City selector (simple for now - can enhance later)
-                  _buildCitySelector(context, state.city),
-
-                  const SizedBox(height: 32),
-
-                  // Selected areas (chips with X)
-                  if (state.selectedAreas.isNotEmpty) ...[
-                    const Text(
-                      'Selected Areas:',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
-                      ),
+                  // Card containing city + all area chips
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.textDark.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: state.selectedAreas.map((area) {
-                        return _buildLocationChip(
-                          area.name,
-                          onRemove: () {
-                            context.read<LocationBloc>().add(
-                                  ToggleAreaSelection(area),
-                                );
-                          },
-                        );
-                      }).toList(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // City selector
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              state.city,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.keyboard_arrow_down, size: 22, color: AppColors.textDark),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Unified area chips
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: state.areas.map((area) {
+                            final isSelected = state.selectedAreas.any((a) => a.id == area.id);
+                            return GestureDetector(
+                              onTap: () {
+                                context.read<LocationBloc>().add(ToggleAreaSelection(area));
+                              },
+                              child: isSelected
+                                  ? _buildSelectedChip(area.name, onRemove: () {
+                                      context.read<LocationBloc>().add(ToggleAreaSelection(area));
+                                    })
+                                  : _buildUnselectedChip(area.name),
+                            );
+                          }).toList(),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Available areas
-                  const Text(
-                    'Popular Areas:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Areas grid
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: state.areas.map((area) {
-                      final isSelected = state.selectedAreas.any(
-                        (a) => a.id == area.id,
-                      );
-                      return ChipButton(
-                        text: area.name,
-                        isSelected: isSelected,
-                        onTap: () {
-                          context.read<LocationBloc>().add(
-                                ToggleAreaSelection(area),
-                              );
-                        },
-                      );
-                    }).toList(),
                   ),
                 ],
               ),
             ),
           ),
-
-          // Bottom navigation
+          // Bottom CTAs
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton(
-                  onPressed: () {
-                    context.read<LocationBloc>().add(SkipLocationSelection());
-                  },
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: state.hasSelections
-                      ? () {
-                          context.read<LocationBloc>().add(
-                                SubmitPreferredLocations(),
-                              );
-                        }
-                      : null,
-                  child: Row(
-                    children: [
-                      Text(
-                        'Next',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: state.hasSelections
+                        ? () {
+                            context.read<LocationBloc>().add(SubmitPreferredLocations());
+                          }
+                        : null,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Next',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: state.hasSelections
+                                ? AppColors.textDark
+                                : AppColors.textDark.withOpacity(0.3),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.arrow_forward,
+                          size: 20,
                           color: state.hasSelections
                               ? AppColors.textDark
                               : AppColors.textDark.withOpacity(0.3),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    context.read<LocationBloc>().add(SkipLocationSelection());
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      'Skip',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textDark,
+                        decoration: TextDecoration.underline,
                       ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward,
-                        size: 20,
-                        color: state.hasSelections
-                            ? AppColors.textDark
-                            : AppColors.textDark.withOpacity(0.3),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -251,36 +237,7 @@ class _SeekerLocationContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCitySelector(BuildContext context, String currentCity) {
-    // Simple dropdown for now - can enhance with search later
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.location_city, color: AppColors.textDark),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              currentCity,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textDark,
-              ),
-            ),
-          ),
-          const Icon(Icons.arrow_drop_down, color: AppColors.textDark),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocationChip(String text, {required VoidCallback onRemove}) {
+  Widget _buildSelectedChip(String text, {required VoidCallback onRemove}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
@@ -301,13 +258,28 @@ class _SeekerLocationContent extends StatelessWidget {
           const SizedBox(width: 8),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(
-              Icons.close,
-              size: 18,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.cancel, size: 20, color: Colors.white),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUnselectedChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: AppColors.textDark.withOpacity(0.2)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textDark,
+        ),
       ),
     );
   }

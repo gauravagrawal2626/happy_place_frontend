@@ -3,10 +3,10 @@
 /// Centralized configuration for backend API connections.
 /// Change baseUrl based on environment (local/staging/production).
 class ApiConfig {
-  // Dev backend (remote)
-  static const String baseUrl = 'http://13.126.87.95:8000';
   // Local: For iOS Simulator use 127.0.0.1; Android Emulator use 10.0.2.2; real device use machine IP
-  // static const String baseUrl = 'http://127.0.0.1:8000';
+  static const String baseUrl = 'http://127.0.0.1:8000';
+  // Dev backend (remote)
+  // static const String baseUrl = 'http://13.126.87.95:8000';
   
   // API Endpoints
   static const String authLogin = '/api/auth/login';
