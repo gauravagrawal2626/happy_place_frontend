@@ -39,7 +39,7 @@ class ActionButtonsRow extends StatelessWidget {
               disabledForegroundColor: Colors.grey[600],
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(30),
                 side: BorderSide(
                   color: leftButtonEnabled 
                       ? AppColors.textDark 
@@ -71,7 +71,7 @@ class ActionButtonsRow extends StatelessWidget {
               disabledForegroundColor: Colors.grey[600],
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(30),
               ),
               elevation: 4,
             ),

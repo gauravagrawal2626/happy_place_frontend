@@ -3,6 +3,7 @@
 /// Shared bottom navigation bar used in both SEEKER and LISTER screens.
 /// Contains 2 tabs: Search results, Account
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
@@ -20,65 +21,93 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.transparent, // Transparent background
-        // Remove box shadow for floating effect
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // Search results tab
-            Expanded(
-              child: _buildNavItem(
-                icon: Icons.search,
-                label: 'Search results',
-                isSelected: currentIndex == 0,
-                onTap: onResultsTap ?? () {},
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Icon(
+                      Icons.map_outlined,
+                      color: currentIndex == 0 ? AppColors.textDark : Colors.grey[500],
+                      size: 24,
+                    ),
+                  ),
+                  Expanded(
+                    child: _buildNavItem(
+                      label: 'Search results',
+                      isSelected: currentIndex == 0,
+                      onTap: onResultsTap ?? () {},
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: _buildNavItem(
+                      label: 'Account',
+                      isSelected: currentIndex == 1,
+                      onTap: onAccountTap ?? () {},
+                    ),
+                  ),
+                ],
               ),
             ),
-            // Account tab
-            Expanded(
-              child: _buildNavItem(
-                icon: Icons.person_outline,
-                label: 'Account',
-                isSelected: currentIndex == 1,
-                onTap: onAccountTap ?? () {},
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildNavItem({
-    required IconData icon,
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.background.withOpacity(0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? AppColors.textDark : Colors.grey[600],
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected ? AppColors.textDark : Colors.grey[600],
+            if (isSelected) ...[
+              Icon(
+                Icons.circle,
+                size: 8,
+                color: AppColors.background,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? AppColors.background : Colors.grey[600],
+                ),
               ),
             ),
           ],

@@ -497,15 +497,15 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.textDark : Colors.white.withOpacity(0.85),
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   displayLabels?[option] ?? option,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected ? Colors.white : AppColors.textDark,
                   ),
@@ -637,13 +637,10 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.textDark : Colors.white.withOpacity(0.85),
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: isSelected ? AppColors.textDark : AppColors.textDark.withOpacity(0.3),
-                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -758,10 +755,10 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
           },
           child: Container(
             constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 72),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: isSelected ? AppColors.textDark : Colors.white.withOpacity(0.85),
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -769,17 +766,17 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
                 if (option.imageUrl != null) ...[
                   Image.network(
                     option.imageUrl!,
-                    width: 24,
-                    height: 24,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 24),
+                    width: 20,
+                    height: 20,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 20),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                 ],
                 Flexible(
                   child: Text(
                     option.text,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected ? Colors.white : AppColors.textDark,
                     ),

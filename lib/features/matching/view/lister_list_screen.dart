@@ -68,23 +68,7 @@ class _ListerListScreenState extends State<_ListerListContent> {
         final hasError = state is MatchingError;
         return Scaffold(
           backgroundColor: AppColors.background,
-          bottomNavigationBar: AppBottomNav(
-            currentIndex: 0, // Search results selected (lister is on list view)
-            onResultsTap: () {
-              // Already on search results (list view) - no action needed
-            },
-            onAccountTap: () {
-              // Show account modal
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => const AccountModalWithBlur(),
-              );
-            },
-          ),
-          body: SafeArea(
-            child: Stack(
+          body: Stack(
               children: [
                 // Loading overlay
                 if (isLoading)
@@ -144,26 +128,37 @@ class _ListerListScreenState extends State<_ListerListContent> {
                   Positioned(
                     left: 20,
                     right: 20,
-                    bottom: 0, // Positioned at bottom, SafeArea will handle spacing
-                    child: SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 12), // Small gap above bottom nav
-                        child: ActionButtonsRow(
-                        leftButtonText: 'Flatmate Preference',
-                        rightButtonText: 'Add Flat Details',
-                        onLeftPressed: () {
-                          context.push('/preferences/edit');
-                        },
-                        onRightPressed: () {
-                          context.push('/flat-requirements', extra: true);
-                        },
-                        ),
-                      ),
+                    bottom: MediaQuery.of(context).padding.bottom + 110,
+                    child: ActionButtonsRow(
+                      leftButtonText: 'Flatmate Preference',
+                      rightButtonText: 'Add Flat Details',
+                      onLeftPressed: () {
+                        context.push('/preferences/edit');
+                      },
+                      onRightPressed: () {
+                        context.push('/flat-requirements', extra: true);
+                      },
                     ),
                   ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: AppBottomNav(
+                    currentIndex: 0,
+                    onResultsTap: () {},
+                    onAccountTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const AccountModalWithBlur(),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
-          ),
         );
       },
     );

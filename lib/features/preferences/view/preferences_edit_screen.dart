@@ -133,59 +133,54 @@ class _PreferencesEditContent extends StatelessWidget {
   }
 
   Widget _buildMainContent(BuildContext context, PreferencesLoaded state) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text(
-          'Flatmate Preferences',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ...state.questions.map((question) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 32),
-                      child: _buildQuestionSection(
-                        context,
-                        question,
-                        state.answers[question.id],
-                        (answer) {
-                          context.read<PreferencesBloc>().add(
-                            UpdatePreferenceAnswer(
-                              questionId: question.id,
-                              answer: answer,
-                            ),
-                          );
-                        },
+    return AppScaffold(
+      useSafeArea: false,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Flatmate Preferences',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
                       ),
-                    );
-                  }),
-                  const SizedBox(height: 100), // Space for bottom button
-                ],
+                    ),
+                    const SizedBox(height: 24),
+                    ...state.questions.map((question) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 32),
+                        child: _buildQuestionSection(
+                          context,
+                          question,
+                          state.answers[question.id],
+                          (answer) {
+                            context.read<PreferencesBloc>().add(
+                              UpdatePreferenceAnswer(
+                                questionId: question.id,
+                                answer: answer,
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 100),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            _buildBottomButtons(context, state),
+          ],
+        ),
       ),
-      bottomNavigationBar: _buildBottomButtons(context, state),
     );
   }
 
@@ -240,7 +235,7 @@ class _PreferencesEditContent extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: AppColors.background,
+                color: AppColors.textDark,
               ),
             ),
           ],
@@ -250,8 +245,8 @@ class _PreferencesEditContent extends StatelessWidget {
           min: min.toDouble(),
           max: max.toDouble(),
           divisions: max - min,
-          activeColor: AppColors.background,
-          inactiveColor: AppColors.background.withOpacity(0.2),
+          activeColor: AppColors.textDark,
+          inactiveColor: AppColors.textDark.withOpacity(0.2),
           onChanged: (newValue) {
             onAnswerChanged(newValue.toInt());
           },
@@ -322,36 +317,18 @@ class _PreferencesEditContent extends StatelessWidget {
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.background : Colors.white,
+                  color: isSelected ? AppColors.textDark : Colors.white.withOpacity(0.85),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? AppColors.background : Colors.grey[300]!,
-                    width: 1.5,
-                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (option.imageUrl != null) ...[
-                      Image.network(
-                        option.imageUrl!,
-                        width: 24,
-                        height: 24,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 24),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(
-                      option.displayText, // Uses edit_display_text or text
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : AppColors.textDark,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  option.displayText,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? Colors.white : AppColors.textDark,
+                  ),
                 ),
               ),
             ),
@@ -383,20 +360,16 @@ class _PreferencesEditContent extends StatelessWidget {
                         }
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSubSelected ? AppColors.background : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSubSelected ? AppColors.background : Colors.grey[300]!,
-                            width: 1.5,
-                          ),
+                          color: isSubSelected ? AppColors.textDark : Colors.white.withOpacity(0.85),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          subOption.displayText, // Uses edit_display_text or text
+                          subOption.displayText,
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            fontWeight: isSubSelected ? FontWeight.w600 : FontWeight.w500,
                             color: isSubSelected ? Colors.white : AppColors.textDark,
                           ),
                         ),
@@ -426,81 +399,74 @@ class _PreferencesEditContent extends StatelessWidget {
       ),
       decoration: InputDecoration(
         hintText: question.helpText ?? 'Enter text...',
+        fillColor: Colors.white.withOpacity(0.85),
+        filled: true,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: AppColors.textDark.withOpacity(0.3)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: AppColors.textDark.withOpacity(0.3)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.background, width: 2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.textDark, width: 2),
         ),
       ),
     );
   }
 
   Widget _buildBottomButtons(BuildContext context, PreferencesLoaded state) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            offset: const Offset(0, -2),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Save & Search again button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: state.hasChanges
-                    ? () {
-                        context.read<PreferencesBloc>().add(SubmitPreferences());
-                      }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.textDark,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  disabledBackgroundColor: Colors.grey[300],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: state.hasChanges
+                  ? () {
+                      context.read<PreferencesBloc>().add(SubmitPreferences());
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.textDark,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                child: const Text(
-                  'Save & Search again',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                disabledBackgroundColor: Colors.grey[300],
+              ),
+              child: const Text(
+                'Save Changes',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            // Skip button
-            TextButton(
-              onPressed: () => context.pop(),
-              child: const Text(
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => context.pop(),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text(
                 'Skip',
                 style: TextStyle(
                   fontSize: 14,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.textDark,
                   decoration: TextDecoration.underline,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

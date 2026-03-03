@@ -116,6 +116,7 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBody: true,
       body: Stack(
         children: [
           // Full screen map - takes entire screen
@@ -216,79 +217,70 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
             child: _buildFilterChips(),
           ),
           
-          // Recenter button (above action buttons)
           if (_recenterMap != null)
             Positioned(
               right: 20,
-              bottom: 100, // Position above the action buttons row
-              child: SafeArea(
-                child: GestureDetector(
-                  onTap: () {
-                    // Recenter map to initial position and zoom
-                    _recenterMap?.call();
-                  },
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.my_location,
-                      color: AppColors.textDark,
-                      size: 24,
-                    ),
+              bottom: MediaQuery.of(context).padding.bottom + 180,
+              child: GestureDetector(
+                onTap: () {
+                  _recenterMap?.call();
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.my_location,
+                    color: AppColors.textDark,
+                    size: 24,
                   ),
                 ),
               ),
             ),
           
-          // Action buttons row (above bottom nav)
           Positioned(
             left: 20,
             right: 20,
-            bottom: 0, // Positioned at bottom, SafeArea will handle spacing
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12), // Small gap above bottom nav
-                child: ActionButtonsRow(
-                leftButtonText: 'Flatmate Preference',
-                rightButtonText: 'Add Flat Details',
-                onLeftPressed: () {
-                  context.push('/preferences/edit');
-                },
-                onRightPressed: () {
-                  context.push('/flat-requirements', extra: true); // isLister: true
-                },
-                ),
-              ),
+            bottom: MediaQuery.of(context).padding.bottom + 110,
+            child: ActionButtonsRow(
+              leftButtonText: 'Flatmate Preference',
+              rightButtonText: 'Add Flat Details',
+              onLeftPressed: () {
+                context.push('/preferences/edit');
+              },
+              onRightPressed: () {
+                context.push('/flat-requirements', extra: true);
+              },
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: AppBottomNav(
+              currentIndex: 0,
+              onResultsTap: () {},
+              onAccountTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const AccountModalWithBlur(),
+                );
+              },
             ),
           ),
         ],
-      ),
-      // Bottom navigation bar
-      bottomNavigationBar: AppBottomNav(
-        currentIndex: 0, // Search results selected (seeker is on map view)
-        onResultsTap: () {
-          // Already on search results (map view) - no action needed
-        },
-        onAccountTap: () {
-          // Show account modal
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) => const AccountModalWithBlur(),
-          );
-        },
       ),
     );
       },

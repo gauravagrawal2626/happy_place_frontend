@@ -9,6 +9,8 @@ import '../../features/profile/model/public_profile_model.dart';
 import '../../features/profile/repository/profile_repository.dart';
 import '../../features/profile/repository/requests_repository.dart';
 import '../theme/app_colors.dart';
+import 'profile/profile_flat_details.dart';
+import 'profile/profile_flat_preferences.dart';
 import 'profile/profile_header.dart';
 import 'profile/profile_lifestyle_tags.dart';
 import 'profile/profile_request_buttons.dart';
@@ -230,6 +232,14 @@ class _ProfileModalState extends State<ProfileModal> {
                 ],
                 if (p.weekendActivities != null && p.weekendActivities!.isNotEmpty) ...[
                   ProfileSection(title: 'Weekend activities', singleLine: p.weekendActivities),
+                  const SizedBox(height: 24),
+                ],
+                if (p.flatDetails != null) ...[
+                  ProfileFlatDetails(details: p.flatDetails!),
+                  const SizedBox(height: 24),
+                ],
+                if (p.flatPreferences != null) ...[
+                  ProfileFlatPreferences(preferences: p.flatPreferences!),
                   const SizedBox(height: 24),
                 ],
                 ProfileRequestButtons(

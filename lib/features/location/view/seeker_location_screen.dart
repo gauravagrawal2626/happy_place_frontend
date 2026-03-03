@@ -148,11 +148,11 @@ class _SeekerLocationContent extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Unified area chips
+                        // Unified area chips (sorted alphabetically)
                         Wrap(
                           spacing: 10,
                           runSpacing: 10,
-                          children: state.areas.map((area) {
+                          children: (List.of(state.areas)..sort((a, b) => a.name.compareTo(b.name))).map((area) {
                             final isSelected = state.selectedAreas.any((a) => a.id == area.id);
                             return GestureDetector(
                               onTap: () {
