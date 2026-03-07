@@ -22,7 +22,9 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      children: [
+        Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CircleAvatar(
@@ -66,6 +68,10 @@ class ProfileHeader extends StatelessWidget {
             ],
           ),
         ),
+      ],
+    ),
+        const SizedBox(height: 16),
+        Divider(height: 1, thickness: 0.5, color: AppColors.textDark.withOpacity(0.15)),
       ],
     );
   }
