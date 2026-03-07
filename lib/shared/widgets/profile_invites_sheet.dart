@@ -15,6 +15,8 @@ import 'profile/profile_header.dart';
 import 'profile/profile_lifestyle_tags.dart';
 import 'profile/profile_section.dart';
 import 'profile/profile_skip_button.dart';
+import 'profile/profile_flat_details.dart';
+import 'profile/profile_flat_preferences.dart';
 import 'profile/invites_tab_content.dart';
 import 'profile_modal.dart';
 import '../theme/app_colors.dart';
@@ -299,6 +301,13 @@ class _ProfileInvitesSheetState extends State<ProfileInvitesSheet>
               p.weekendActivities!.isNotEmpty) ...[
             ProfileSection(
                 title: 'Weekend activities', singleLine: p.weekendActivities),
+            const SizedBox(height: 24),
+          ],
+          if (p.flatInfo != null) ...[
+            if (p.flatInfo!.isLister)
+              ProfileFlatDetails(details: p.flatInfo!, location: p.location)
+            else
+              ProfileFlatPreferences(preferences: p.flatInfo!),
             const SizedBox(height: 24),
           ],
         ],

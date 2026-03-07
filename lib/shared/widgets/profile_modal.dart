@@ -158,9 +158,9 @@ class _ProfileModalState extends State<ProfileModal> {
   @override
   Widget build(BuildContext context) {
     final sheet = DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.7,
         expand: false,
         builder: (context, scrollController) {
           if (_loading) {
@@ -234,12 +234,11 @@ class _ProfileModalState extends State<ProfileModal> {
                   ProfileSection(title: 'Weekend activities', singleLine: p.weekendActivities),
                   const SizedBox(height: 24),
                 ],
-                if (p.flatDetails != null) ...[
-                  ProfileFlatDetails(details: p.flatDetails!),
-                  const SizedBox(height: 24),
-                ],
-                if (p.flatPreferences != null) ...[
-                  ProfileFlatPreferences(preferences: p.flatPreferences!),
+                if (p.flatInfo != null) ...[
+                  if (p.flatInfo!.isLister)
+                    ProfileFlatDetails(details: p.flatInfo!, location: p.location)
+                  else
+                    ProfileFlatPreferences(preferences: p.flatInfo!),
                   const SizedBox(height: 24),
                 ],
                 ProfileRequestButtons(

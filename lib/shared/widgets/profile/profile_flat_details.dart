@@ -1,15 +1,25 @@
 /// Flat Details section for ProfileModal.
-/// Shown when a SEEKER views a LISTER's profile (flat_details is non-null).
+/// Shown when flat_info.role == "lister".
 
 import 'package:flutter/material.dart';
 import '../../../features/profile/model/public_profile_model.dart';
 import '../../theme/app_colors.dart';
 import 'profile_question_responses.dart';
 
-class ProfileFlatDetails extends StatelessWidget {
-  final FlatDetailInfo details;
+class ProfileFlatDetails extends StatefulWidget {
+  final FlatInfo details;
+  final String? location;
 
-  const ProfileFlatDetails({super.key, required this.details});
+  const ProfileFlatDetails({super.key, required this.details, this.location});
+
+  @override
+  State<ProfileFlatDetails> createState() => _ProfileFlatDetailsState();
+}
+
+class _ProfileFlatDetailsState extends State<ProfileFlatDetails> {
+  int _currentImageIndex = 0;
+
+  FlatInfo get details => widget.details;
 
   static String _formatRent(int amount) {
     final formatted = amount.toString().replaceAllMapped(
@@ -34,31 +44,54 @@ class ProfileFlatDetails extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        if (details.images.isNotEmpty)
+        if (details.images.isNotEmpty) ...[
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: SizedBox(
               height: 180,
               width: double.infinity,
-              child: Image.network(
-                details.images.first,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: AppColors.background.withOpacity(0.2),
-                  child: const Center(
-                    child: Icon(Icons.home, size: 48, color: AppColors.textDark),
+              child: PageView.builder(
+                itemCount: details.images.length,
+                onPageChanged: (i) => setState(() => _currentImageIndex = i),
+                itemBuilder: (context, i) => Image.network(
+                  details.images[i],
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: AppColors.background.withValues(alpha: 0.2),
+                    child: const Center(
+                      child: Icon(Icons.home, size: 48, color: AppColors.textDark),
+                    ),
                   ),
                 ),
               ),
             ),
-          )
-        else
+          ),
+          if (details.images.length > 1) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(details.images.length, (i) {
+                return Container(
+                  width: _currentImageIndex == i ? 8 : 6,
+                  height: _currentImageIndex == i ? 8 : 6,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentImageIndex == i
+                        ? AppColors.textDark
+                        : AppColors.textDark.withValues(alpha: 0.3),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ] else
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
               height: 120,
               width: double.infinity,
-              color: AppColors.background.withOpacity(0.2),
+              color: AppColors.background.withValues(alpha: 0.2),
               child: const Center(
                 child: Icon(Icons.home, size: 48, color: AppColors.textDark),
               ),
@@ -75,14 +108,26 @@ class ProfileFlatDetails extends StatelessWidget {
               color: AppColors.textDark,
             ),
           ),
-        if (details.locality != null || details.city != null) ...[
+        if (widget.location != null || details.formattedAddress != null || details.locality != null || details.city != null) ...[
           const SizedBox(height: 4),
-          Text(
-            [details.locality, details.city].whereType<String>().join(', '),
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textDark.withOpacity(0.6),
-            ),
+          Row(
+            children: [
+              Icon(Icons.location_on, size: 14, color: AppColors.textDark.withOpacity(0.6)),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  widget.location ??
+                      details.formattedAddress ??
+                      [details.locality, details.city].whereType<String>().join(', '),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textDark.withOpacity(0.6),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ],
         const SizedBox(height: 10),
@@ -171,6 +216,12 @@ class ProfileFlatDetails extends StatelessWidget {
     'has_security': _AmenityDef(Icons.security, 'Security'),
     'has_elevator': _AmenityDef(Icons.elevator, 'Elevator'),
     'is_furnished': _AmenityDef(Icons.chair, 'Furnished'),
+    'has_attached_washroom': _AmenityDef(Icons.bathroom, 'Attached Washroom'),
+    'has_attached_balcony': _AmenityDef(Icons.balcony, 'Balcony'),
+    'has_washing_machine': _AmenityDef(Icons.local_laundry_service, 'Washing Machine'),
+    'has_refrigerator': _AmenityDef(Icons.kitchen, 'Refrigerator'),
+    'has_tv': _AmenityDef(Icons.tv, 'TV'),
+    'has_geyser': _AmenityDef(Icons.water_drop, 'Geyser'),
   };
 
   List<Widget> _buildAmenityChips() {

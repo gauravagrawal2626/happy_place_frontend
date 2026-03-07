@@ -1,5 +1,5 @@
 /// Flat Preferences section for ProfileModal.
-/// Shown when a LISTER views a SEEKER's profile (flat_preferences is non-null).
+/// Shown when flat_info.role == "seeker".
 
 import 'package:flutter/material.dart';
 import '../../../features/profile/model/public_profile_model.dart';
@@ -7,7 +7,7 @@ import '../../theme/app_colors.dart';
 import 'profile_question_responses.dart';
 
 class ProfileFlatPreferences extends StatelessWidget {
-  final FlatPreferenceInfo preferences;
+  final FlatInfo preferences;
 
   const ProfileFlatPreferences({super.key, required this.preferences});
 
@@ -75,6 +75,22 @@ class ProfileFlatPreferences extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+
+        if (preferences.preferredLocations.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Preferred Areas',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: preferences.preferredLocations.map((loc) {
+              return _facilityChip(Icons.location_on, '${loc.name}, ${loc.city}');
+            }).toList(),
           ),
         ],
 

@@ -127,7 +127,7 @@ class FlatmateMatch {
   final String userId;
   final String fullName;
   final double matchScore; // 0-100
-  final String flatId; // Always present for LISTER
+  final String? flatId;
   final int? age;
   final String? tagline;
   final String? imageUrl;
@@ -137,7 +137,7 @@ class FlatmateMatch {
     required this.userId,
     required this.fullName,
     required this.matchScore,
-    required this.flatId,
+    this.flatId,
     this.age,
     this.tagline,
     this.imageUrl,
@@ -149,7 +149,7 @@ class FlatmateMatch {
       userId: json['user_id'] as String,
       fullName: json['full_name'] as String? ?? '',
       matchScore: (json['match_score'] as num?)?.toDouble() ?? 0.0,
-      flatId: json['flat_id'] as String,
+      flatId: json['flat_id'] as String?,
       age: json['age'] as int?,
       tagline: json['tagline'] as String?,
       imageUrl: json['image_url'] as String?,

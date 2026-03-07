@@ -63,7 +63,26 @@ class ResolvedQuestionResponse {
   }
 }
 
-class FlatDetailInfo {
+class PreferredLocationInfo {
+  final String name;
+  final String city;
+  final double? radiusKm;
+
+  const PreferredLocationInfo({required this.name, required this.city, this.radiusKm});
+
+  factory PreferredLocationInfo.fromJson(Map<String, dynamic> json) {
+    return PreferredLocationInfo(
+      name: json['name'] as String? ?? '',
+      city: json['city'] as String? ?? '',
+      radiusKm: (json['radius_km'] as num?)?.toDouble(),
+    );
+  }
+}
+
+class FlatInfo {
+  final String role; // "lister" or "seeker"
+  final List<ResolvedQuestionResponse> questionResponses;
+  // Lister-only fields
   final String? flatId;
   final String? title;
   final String? type;
@@ -75,11 +94,19 @@ class FlatDetailInfo {
   final List<String> images;
   final String? locality;
   final String? city;
+  final String? formattedAddress;
   final Map<String, dynamic> amenities;
   final Map<String, dynamic> rules;
-  final List<ResolvedQuestionResponse> questionResponses;
+  // Seeker-only fields
+  final String? preferredListingType;
+  final String? preferredFlatSize;
+  final int? maxRent;
+  final List<String> requiredFacilities;
+  final List<PreferredLocationInfo> preferredLocations;
 
-  FlatDetailInfo({
+  FlatInfo({
+    required this.role,
+    this.questionResponses = const [],
     this.flatId,
     this.title,
     this.type,
@@ -91,13 +118,26 @@ class FlatDetailInfo {
     this.images = const [],
     this.locality,
     this.city,
+    this.formattedAddress,
     this.amenities = const {},
     this.rules = const {},
-    this.questionResponses = const [],
+    this.preferredListingType,
+    this.preferredFlatSize,
+    this.maxRent,
+    this.requiredFacilities = const [],
+    this.preferredLocations = const [],
   });
 
-  factory FlatDetailInfo.fromJson(Map<String, dynamic> json) {
-    return FlatDetailInfo(
+  bool get isLister => role == 'lister';
+  bool get isSeeker => role == 'seeker';
+
+  factory FlatInfo.fromJson(Map<String, dynamic> json) {
+    return FlatInfo(
+      role: json['role'] as String? ?? '',
+      questionResponses: (json['question_responses'] as List?)
+              ?.map((e) => ResolvedQuestionResponse.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       flatId: json['flat_id'] as String?,
       title: json['title'] as String?,
       type: json['type'] as String?,
@@ -109,43 +149,19 @@ class FlatDetailInfo {
       images: (json['images'] as List?)?.cast<String>() ?? [],
       locality: json['locality'] as String?,
       city: json['city'] as String?,
+      formattedAddress: json['formatted_address'] as String?,
       amenities: json['amenities'] is Map
           ? Map<String, dynamic>.from(json['amenities'] as Map)
           : {},
       rules: json['rules'] is Map
           ? Map<String, dynamic>.from(json['rules'] as Map)
           : {},
-      questionResponses: (json['question_responses'] as List?)
-              ?.map((e) => ResolvedQuestionResponse.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-    );
-  }
-}
-
-class FlatPreferenceInfo {
-  final String? preferredListingType;
-  final String? preferredFlatSize;
-  final int? maxRent;
-  final List<String> requiredFacilities;
-  final List<ResolvedQuestionResponse> questionResponses;
-
-  FlatPreferenceInfo({
-    this.preferredListingType,
-    this.preferredFlatSize,
-    this.maxRent,
-    this.requiredFacilities = const [],
-    this.questionResponses = const [],
-  });
-
-  factory FlatPreferenceInfo.fromJson(Map<String, dynamic> json) {
-    return FlatPreferenceInfo(
       preferredListingType: json['preferred_listing_type'] as String?,
       preferredFlatSize: json['preferred_flat_size'] as String?,
       maxRent: json['max_rent'] as int?,
       requiredFacilities: (json['required_facilities'] as List?)?.cast<String>() ?? [],
-      questionResponses: (json['question_responses'] as List?)
-              ?.map((e) => ResolvedQuestionResponse.fromJson(e as Map<String, dynamic>))
+      preferredLocations: (json['preferred_locations'] as List?)
+              ?.map((e) => PreferredLocationInfo.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
@@ -165,8 +181,7 @@ class PublicProfile {
   final String? weekendActivities;
   final double? matchScore;
   final Map<String, dynamic>? requestStatus;
-  final FlatDetailInfo? flatDetails;
-  final FlatPreferenceInfo? flatPreferences;
+  final FlatInfo? flatInfo;
 
   PublicProfile({
     required this.userId,
@@ -181,8 +196,7 @@ class PublicProfile {
     this.weekendActivities,
     this.matchScore,
     this.requestStatus,
-    this.flatDetails,
-    this.flatPreferences,
+    this.flatInfo,
   });
 
   factory PublicProfile.fromJson(Map<String, dynamic> json) {
@@ -205,11 +219,8 @@ class PublicProfile {
       weekendActivities: json['weekend_activities'] as String?,
       matchScore: (json['match_score'] as num?)?.toDouble(),
       requestStatus: _parseRequestStatus(json['request_status'] ?? json['requestStatus']),
-      flatDetails: json['flat_details'] != null
-          ? FlatDetailInfo.fromJson(Map<String, dynamic>.from(json['flat_details'] as Map))
-          : null,
-      flatPreferences: json['flat_preferences'] != null
-          ? FlatPreferenceInfo.fromJson(Map<String, dynamic>.from(json['flat_preferences'] as Map))
+      flatInfo: json['flat_info'] != null
+          ? FlatInfo.fromJson(Map<String, dynamic>.from(json['flat_info'] as Map))
           : null,
     );
   }

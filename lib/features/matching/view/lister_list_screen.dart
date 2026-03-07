@@ -167,21 +167,23 @@ class _ListerListScreenState extends State<_ListerListContent> {
   Widget _buildHeader(BuildContext context, int totalMatches) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          // Title
-          Expanded(
-            child: Text(
-              '$totalMatches potential flatmates found within 5 kms',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$totalMatches potential flatmates found within 5 kms',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+                maxLines: 2,
               ),
-              maxLines: 2,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -298,95 +300,102 @@ class _ListerListScreenState extends State<_ListerListContent> {
           width: 1,
         ),
       ),
-      child: Stack(
+      child: Column(
         children: [
-          // Image placeholder with icon
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
                 color: AppColors.background.withOpacity(0.3),
-                child: Stack(
-                  children: [
-                    // Center icon
-                    Center(
-                      child: Icon(
-                        Icons.person,
-                        size: 64,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
-                    ),
-                    // Bottom section
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                    // Info section at bottom
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(11),
-                          bottomRight: Radius.circular(11),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: Center(
+                child: SizedBox(
+                  width: 76,
+                  height: 76,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 76,
+                        height: 76,
+                        child: CircularProgressIndicator(
+                          value: flatmate.matchScore / 100,
+                          strokeWidth: 3.5,
+                          backgroundColor: Colors.white.withOpacity(0.3),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            flatmate.age != null ? '${flatmate.age},' : flatmate.fullName,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          Text(
-                            flatmate.tagline ?? '',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textDark.withOpacity(0.7),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      CircleAvatar(
+                        radius: 32,
+                        backgroundColor: Colors.white.withOpacity(0.3),
+                        backgroundImage: flatmate.imageUrl != null
+                            ? NetworkImage(flatmate.imageUrl!)
+                            : null,
+                        child: flatmate.imageUrl == null
+                            ? Icon(Icons.person, size: 36, color: Colors.white.withOpacity(0.5))
+                            : null,
                       ),
-                    ),
-                      ],
-                    ),
-                  ],
+                      Positioned(
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${flatmate.matchScore.round()}%',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-          
-          // Match percentage badge
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(11),
+                bottomRight: Radius.circular(11),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  flatmate.fullName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
                   ),
-                ],
-              ),
-              child: Text(
-                '${flatmate.matchScore.round()}%',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+                if (flatmate.tagline != null && flatmate.tagline!.isNotEmpty)
+                  Text(
+                    flatmate.tagline!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textDark.withOpacity(0.7),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
             ),
           ),
         ],
