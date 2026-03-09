@@ -16,6 +16,11 @@ import '../../profile/repository/requests_repository.dart';
 import '../bloc/matching_bloc.dart';
 import '../bloc/matching_event.dart';
 import '../bloc/matching_state.dart';
+import '../model/filter_model.dart';
+import '../repository/matching_repository.dart';
+import '../widgets/location_filter_sheet.dart';
+import '../widgets/match_filter_chips.dart';
+import '../widgets/question_filter_sheet.dart';
 
 /// Seeker Map Screen - Frame 11
 /// 
@@ -34,11 +39,9 @@ class SeekerMapScreen extends StatelessWidget {
         final bloc = MatchingBloc(
           repository: context.read(),
         );
-        // Load matches for SEEKER (uses preferred locations)
-        bloc.add(LoadMatches(
-          radiusKm: 5.0, // Default radius
-          // latitude/longitude: null (uses preferred locations from backend)
-        ));
+        // Parallel: load matches + load filter config
+        bloc.add(LoadMatches(radiusKm: 5.0));
+        bloc.add(LoadMatchFilters());
         return bloc;
       },
       child: const _SeekerMapContent(),
@@ -56,16 +59,17 @@ class _SeekerMapContent extends StatefulWidget {
 class _SeekerMapScreenState extends State<_SeekerMapContent> {
   final double _radiusKm = 5.0;
   
-  // Callback function to recenter the map
   VoidCallback? _recenterMap;
-  
-  // Filter states
-  bool _vegetarianFilter = false;
-  bool _nonSmokerFilter = false;
   bool _tokenPrinted = false;
 
-  // User location (mock - will use actual location later)
-  final latlong2.LatLng _userLocation = latlong2.LatLng(12.9352, 77.6245); // Koramangala center
+  List<QuestionFilter> _questionFilters = [];
+  Map<String, String> _activeFilters = {};
+
+  LocationFilter? _locationFilter;
+  List<LocationOverride>? _activeLocationOverrides;
+  bool _locationChanged = false;
+
+  final latlong2.LatLng _userLocation = latlong2.LatLng(12.9352, 77.6245);
 
   @override
   void didChangeDependencies() {
@@ -86,9 +90,118 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
     print('═══════════════════════════════════════════════════════════');
   }
 
+  void _reloadAll(BuildContext context) {
+    setState(() {
+      _questionFilters = [];
+      _activeFilters = {};
+      _locationFilter = null;
+      _activeLocationOverrides = null;
+      _locationChanged = false;
+    });
+    final bloc = context.read<MatchingBloc>();
+    bloc.add(LoadMatches(radiusKm: 5.0));
+    bloc.add(LoadMatchFilters());
+  }
+
+  void _onFilterChipTapped(QuestionFilter filter) {
+    showQuestionFilterSheet(
+      context: context,
+      filter: filter,
+      currentSelection: _activeFilters[filter.id],
+      onSelected: (value) {
+        setState(() {
+          if (value == null) {
+            _activeFilters.remove(filter.id);
+          } else {
+            _activeFilters[filter.id] = value;
+          }
+        });
+
+        final changedFilters = <FilterItem>[];
+        for (final entry in _activeFilters.entries) {
+          final q = _questionFilters.firstWhere((f) => f.id == entry.key,
+              orElse: () => filter);
+          if (entry.value != q.currentValue) {
+            changedFilters.add(FilterItem(id: entry.key, value: entry.value));
+          }
+        }
+
+        if (changedFilters.isNotEmpty) {
+          context.read<MatchingBloc>().add(PostFilteredMatches(
+                radiusKm: 5.0,
+                filters: changedFilters,
+                locationOverrides: _activeLocationOverrides,
+              ));
+        } else if (_locationChanged && _activeLocationOverrides != null) {
+          context.read<MatchingBloc>().add(PostFilteredMatches(
+                radiusKm: 5.0,
+                filters: [],
+                locationOverrides: _activeLocationOverrides,
+              ));
+        } else {
+          context.read<MatchingBloc>().add(LoadMatches(radiusKm: 5.0));
+        }
+      },
+    );
+  }
+
+  void _onLocationChipTapped() {
+    if (_locationFilter == null) return;
+    final repo = context.read<MatchingRepository>();
+    showLocationFilterSheet(
+      context: context,
+      savedLocations: _locationFilter!.savedLocations,
+      currentOverrides: _activeLocationOverrides,
+      repository: repo,
+      onApply: (overrides) {
+        setState(() {
+          _activeLocationOverrides = overrides;
+          _locationChanged = overrides != null;
+        });
+
+        // Build question filter items for this request
+        final changedFilters = <FilterItem>[];
+        for (final entry in _activeFilters.entries) {
+          final q = _questionFilters.firstWhere((f) => f.id == entry.key,
+              orElse: () => _questionFilters.first);
+          if (entry.value != q.currentValue) {
+            changedFilters.add(FilterItem(id: entry.key, value: entry.value));
+          }
+        }
+
+        if (overrides != null || changedFilters.isNotEmpty) {
+          context.read<MatchingBloc>().add(PostFilteredMatches(
+                radiusKm: 5.0,
+                filters: changedFilters,
+                locationOverrides: overrides,
+              ));
+        } else {
+          context.read<MatchingBloc>().add(LoadMatches(radiusKm: 5.0));
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MatchingBloc, MatchingState>(
+    return BlocConsumer<MatchingBloc, MatchingState>(
+      listener: (context, state) {
+        if (state is MatchFiltersLoaded) {
+          setState(() {
+            _questionFilters = state.filtersResponse.questionFilters;
+            _activeFilters = {};
+            for (final f in _questionFilters) {
+              if (f.currentValue != null) {
+                _activeFilters[f.id] = f.currentValue!;
+              }
+            }
+            _locationFilter = state.filtersResponse.locationFilter;
+            _activeLocationOverrides = null;
+            _locationChanged = false;
+          });
+        }
+      },
+      buildWhen: (prev, curr) => curr is! MatchFiltersLoaded,
       builder: (context, state) {
         // Get flats from state or use empty list
         final flats = state is MatchingLoaded && state.type == 'flats'
@@ -211,10 +324,17 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
           
           // Overlay filter chips
           Positioned(
-            top: 110, // Below header with gap (accounting for SafeArea)
+            top: 110,
             left: 0,
             right: 0,
-            child: _buildFilterChips(),
+            child: MatchFilterChips(
+              filters: _questionFilters,
+              activeValues: _activeFilters,
+              onFilterTap: _onFilterChipTapped,
+              locationFilter: _locationFilter,
+              locationChanged: _locationChanged,
+              onLocationTap: _onLocationChipTapped,
+            ),
           ),
           
           if (_recenterMap != null)
@@ -251,15 +371,17 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
           Positioned(
             left: 20,
             right: 20,
-            bottom: MediaQuery.of(context).padding.bottom + 110,
+            bottom: MediaQuery.of(context).padding.bottom + 80,
             child: ActionButtonsRow(
               leftButtonText: 'Flatmate Preference',
               rightButtonText: 'Add Flat Details',
-              onLeftPressed: () {
-                context.push('/preferences/edit');
+              onLeftPressed: () async {
+                await context.push('/preferences/edit');
+                if (mounted) _reloadAll(context);
               },
-              onRightPressed: () {
-                context.push('/flat-requirements', extra: true);
+              onRightPressed: () async {
+                await context.push('/flat-requirements', extra: true);
+                if (mounted) _reloadAll(context);
               },
             ),
           ),
@@ -328,93 +450,6 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
                   color: Colors.white,
                   size: 18,
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChips() {
-    return Container(
-      padding: const EdgeInsets.only(top: 8, bottom: 12, left: 12, right: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildFilterChip(
-              label: 'Vegetarian',
-              icon: Icons.eco,
-              isSelected: _vegetarianFilter,
-              onTap: () {
-                setState(() {
-                  _vegetarianFilter = !_vegetarianFilter;
-                });
-              },
-            ),
-            const SizedBox(width: 12),
-            _buildFilterChip(
-              label: 'Non-Smoker',
-              icon: Icons.smoking_rooms,
-              isSelected: _nonSmokerFilter,
-              onTap: () {
-                setState(() {
-                  _nonSmokerFilter = !_nonSmokerFilter;
-                });
-              },
-            ),
-            const SizedBox(width: 12),
-            _buildFilterChip(
-              label: 'More',
-              icon: Icons.tune,
-              isSelected: false,
-              onTap: () {
-                // TODO: Show more filters (Phase 5)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('More filters - Coming in Phase 5')),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.background : Colors.white,
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(
-            color: isSelected ? AppColors.background : Colors.black12,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? Colors.white : AppColors.textDark,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AppColors.textDark,
               ),
             ),
           ],

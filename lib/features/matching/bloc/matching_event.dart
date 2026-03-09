@@ -2,6 +2,8 @@
 /// 
 /// Events for fetching and managing matches
 
+import '../model/filter_model.dart';
+
 abstract class MatchingEvent {}
 
 /// Load matches
@@ -47,3 +49,25 @@ class ApplyFilters extends MatchingEvent {
 
 /// Reset matching state
 class ResetMatches extends MatchingEvent {}
+
+/// Load available question-based filters from GET /api/flats/match-filters
+class LoadMatchFilters extends MatchingEvent {}
+
+/// Post filtered matches via POST /api/flats/matches
+class PostFilteredMatches extends MatchingEvent {
+  final double radiusKm;
+  final String? flatId;
+  final List<FilterItem> filters;
+  final List<LocationOverride>? locationOverrides;
+  final int skip;
+  final int limit;
+
+  PostFilteredMatches({
+    required this.radiusKm,
+    this.flatId,
+    required this.filters,
+    this.locationOverrides,
+    this.skip = 0,
+    this.limit = 20,
+  });
+}

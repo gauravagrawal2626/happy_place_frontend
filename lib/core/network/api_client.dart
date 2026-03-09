@@ -47,8 +47,11 @@ class ApiClient {
   }
 
   /// POST request
-  Future<ApiResponse> post(String endpoint, {Map<String, dynamic>? body}) async {
-    final uri = _buildUri(endpoint);
+  Future<ApiResponse> post(String endpoint, {Map<String, dynamic>? body, Map<String, String>? queryParams}) async {
+    var uri = _buildUri(endpoint);
+    if (queryParams != null) {
+      uri = uri.replace(queryParameters: queryParams);
+    }
     _log('═══════════════════════════════════════');
     _log('POST $uri');
     _log('Auth token set: ${_authToken != null}');

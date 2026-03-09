@@ -6,13 +6,13 @@ import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/action_buttons_row.dart';
 import '../../../shared/widgets/account_modal.dart';
 import '../../../shared/widgets/profile_modal.dart';
-import '../../../core/bloc/app_bloc.dart';
-import '../../../core/bloc/app_event.dart';
-import '../../../core/storage/secure_storage.dart';
 import '../bloc/matching_bloc.dart';
 import '../bloc/matching_event.dart';
 import '../bloc/matching_state.dart';
+import '../model/filter_model.dart';
 import '../model/match_model.dart';
+import '../widgets/match_filter_chips.dart';
+import '../widgets/question_filter_sheet.dart';
 
 /// Lister List Screen - Frame 48
 /// 
@@ -31,11 +31,9 @@ class ListerListScreen extends StatelessWidget {
         final bloc = MatchingBloc(
           repository: context.read(),
         );
-        // Load matches for LISTER (auto-selects latest flat)
-        bloc.add(LoadMatches(
-          radiusKm: 5.0, // Default radius
-          // flatId: null (auto-selects latest active flat)
-        ));
+        // Parallel: load matches + load filter config
+        bloc.add(LoadMatches(radiusKm: 5.0));
+        bloc.add(LoadMatchFilters());
         return bloc;
       },
       child: const _ListerListContent(),
@@ -51,12 +49,75 @@ class _ListerListContent extends StatefulWidget {
 }
 
 class _ListerListScreenState extends State<_ListerListContent> {
-  // Filter states
-  final List<String> _selectedFilters = [];
+  List<QuestionFilter> _questionFilters = [];
+  Map<String, String> _activeFilters = {};
+
+  /// Re-dispatch both LoadMatches and LoadMatchFilters, reset active filters.
+  void _reloadAll(BuildContext context) {
+    setState(() {
+      _questionFilters = [];
+      _activeFilters = {};
+    });
+    final bloc = context.read<MatchingBloc>();
+    bloc.add(LoadMatches(radiusKm: 5.0));
+    bloc.add(LoadMatchFilters());
+  }
+
+  void _onFilterChipTapped(QuestionFilter filter) {
+    showQuestionFilterSheet(
+      context: context,
+      filter: filter,
+      currentSelection: _activeFilters[filter.id],
+      onSelected: (value) {
+        setState(() {
+          if (value == null) {
+            _activeFilters.remove(filter.id);
+          } else {
+            _activeFilters[filter.id] = value;
+          }
+        });
+
+        // Build filter items only for values that differ from defaults
+        final changedFilters = <FilterItem>[];
+        for (final entry in _activeFilters.entries) {
+          final q = _questionFilters.firstWhere((f) => f.id == entry.key,
+              orElse: () => filter);
+          if (entry.value != q.currentValue) {
+            changedFilters.add(FilterItem(id: entry.key, value: entry.value));
+          }
+        }
+
+        if (changedFilters.isNotEmpty) {
+          context.read<MatchingBloc>().add(PostFilteredMatches(
+                radiusKm: 5.0,
+                filters: changedFilters,
+              ));
+        } else {
+          // All filters back to default — use normal GET
+          context.read<MatchingBloc>().add(LoadMatches(radiusKm: 5.0));
+        }
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MatchingBloc, MatchingState>(
+    return BlocConsumer<MatchingBloc, MatchingState>(
+      listener: (context, state) {
+        if (state is MatchFiltersLoaded) {
+          setState(() {
+            _questionFilters = state.filtersResponse.questionFilters;
+            // Initialize active filters from currentValue defaults
+            _activeFilters = {};
+            for (final f in _questionFilters) {
+              if (f.currentValue != null) {
+                _activeFilters[f.id] = f.currentValue!;
+              }
+            }
+          });
+        }
+      },
+      buildWhen: (prev, curr) => curr is! MatchFiltersLoaded,
       builder: (context, state) {
         // Get flatmates from state or use empty list
         final flatmates = state is MatchingLoaded && state.type == 'seekers'
@@ -113,8 +174,12 @@ class _ListerListScreenState extends State<_ListerListContent> {
                       // Header
                       _buildHeader(context, totalMatches),
                       
-                      // Filter chips
-                      _buildFilterChips(),
+                      // Dynamic question filter chips
+                      MatchFilterChips(
+                        filters: _questionFilters,
+                        activeValues: _activeFilters,
+                        onFilterTap: _onFilterChipTapped,
+                      ),
                       
                       // Grid of flatmates
                       Expanded(
@@ -128,15 +193,17 @@ class _ListerListScreenState extends State<_ListerListContent> {
                   Positioned(
                     left: 20,
                     right: 20,
-                    bottom: MediaQuery.of(context).padding.bottom + 110,
+                    bottom: MediaQuery.of(context).padding.bottom + 80,
                     child: ActionButtonsRow(
                       leftButtonText: 'Flatmate Preference',
                       rightButtonText: 'Add Flat Details',
-                      onLeftPressed: () {
-                        context.push('/preferences/edit');
+                      onLeftPressed: () async {
+                        await context.push('/preferences/edit');
+                        if (mounted) _reloadAll(context);
                       },
-                      onRightPressed: () {
-                        context.push('/flat-requirements', extra: true);
+                      onRightPressed: () async {
+                        await context.push('/flat-requirements', extra: true);
+                        if (mounted) _reloadAll(context);
                       },
                     ),
                   ),
@@ -183,66 +250,6 @@ class _ListerListScreenState extends State<_ListerListContent> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChips() {
-    final filters = [
-      {'icon': Icons.eco_outlined, 'label': 'Vegetarian'},
-      {'icon': Icons.smoke_free, 'label': 'Non-smoker'},
-      {'icon': Icons.tune, 'label': 'More'},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: filters.map((filter) {
-            final isSelected = _selectedFilters.contains(filter['label']);
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                selected: isSelected,
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      filter['icon'] as IconData,
-                      size: 16,
-                      color: AppColors.textDark,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      filter['label'] as String,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: Colors.white,
-                selectedColor: AppColors.background,
-                side: const BorderSide(color: AppColors.textDark, width: 1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedFilters.add(filter['label'] as String);
-                    } else {
-                      _selectedFilters.remove(filter['label']);
-                    }
-                  });
-                },
-              ),
-            );
-          }).toList(),
         ),
       ),
     );

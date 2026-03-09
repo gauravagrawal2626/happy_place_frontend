@@ -2,6 +2,7 @@
 /// 
 /// States for match fetching and display
 
+import '../model/filter_model.dart';
 import '../model/match_model.dart';
 
 abstract class MatchingState {}
@@ -44,4 +45,11 @@ class MatchingError extends MatchingState {
     required this.message,
     this.previousState,
   });
+}
+
+/// Match filters loaded from GET /api/flats/match-filters
+class MatchFiltersLoaded extends MatchingState {
+  final MatchFiltersResponse filtersResponse;
+
+  MatchFiltersLoaded({required this.filtersResponse});
 }

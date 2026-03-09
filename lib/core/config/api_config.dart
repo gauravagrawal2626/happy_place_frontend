@@ -16,6 +16,7 @@ class ApiConfig {
   
   // Location Endpoints (Phase 4)
   static const String locationAreas = '/api/locations/areas';
+  static const String locationAreasSearch = '/api/locations/areas/search';
   static const String preferredLocations = '/api/users/preferred-locations';
   static const String flats = '/api/flats';
   static const String currentUser = '/api/auth/me'; // Get current user data
@@ -30,6 +31,7 @@ class ApiConfig {
   
   // Matches Endpoints
   static const String matches = '/api/flats/matches';
+  static const String matchFilters = '/api/flats/match-filters';
   
   // Profile & Requests Endpoints
   static String publicProfile(String userId) => '/api/users/$userId/public-profile';

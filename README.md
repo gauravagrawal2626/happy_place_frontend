@@ -728,5 +728,72 @@ Body:
 
 ---
 
-**Last Updated:** 2025-01-25
-**Current Phase:** Phase 5 Complete ✅ | Next: Phase 4 (Location/Matching) or Phase 6 (Matches API Integration)
+---
+
+### Match Question Filters (Added)
+
+Dynamic question-based filter chips on match screens, replacing the old hardcoded Vegetarian/Non-Smoker/More chips.
+
+#### Flow:
+- **Screen init**: `LoadMatches` (GET) and `LoadMatchFilters` (GET) fire in **parallel**
+- **Filters loaded**: chips populate from `question_filters`, defaults from `current_value`
+- **User taps chip**: mini bottom sheet with that question's options (supports sub-options)
+- **User selects option**: sheet closes, chip highlights, `PostFilteredMatches` fires (POST /api/flats/matches)
+- **User returns from Flatmate Preference / Add Flat Details**: both APIs re-fire, filter state resets
+
+#### API Endpoints:
+- `GET /api/flats/match-filters` — returns `question_filters[]` with options, sub-options, `current_value`
+- `POST /api/flats/matches` — body `{ filters: [{id, value}] }` + query params (`radius_km`, etc.)
+
+#### Files Created:
+- `lib/features/matching/model/filter_model.dart` — `MatchFiltersResponse`, `QuestionFilter`, `FilterItem`
+- `lib/features/matching/widgets/match_filter_chips.dart` — shared horizontal chip bar
+- `lib/features/matching/widgets/question_filter_sheet.dart` — mini bottom sheet per question
+
+#### Files Modified:
+- `lib/core/config/api_config.dart` — added `matchFilters` endpoint
+- `lib/core/network/api_client.dart` — `post()` now accepts `queryParams`
+- `lib/features/matching/repository/matching_repository.dart` — added `getMatchFilters()`, `postMatches()`
+- `lib/features/matching/bloc/matching_event.dart` — added `LoadMatchFilters`, `PostFilteredMatches`
+- `lib/features/matching/bloc/matching_state.dart` — added `MatchFiltersLoaded`
+- `lib/features/matching/bloc/matching_bloc.dart` — handlers for new events, cached `filterConfig`
+- `lib/features/matching/view/lister_list_screen.dart` — dynamic chips, reload on return
+- `lib/features/matching/view/seeker_map_screen.dart` — dynamic chips, reload on return
+
+---
+
+### Seeker Location Filter (Added)
+
+Ephemeral location filter for seekers on the match screen. Allows toggling saved preferred locations and adding new areas via search — sent as `location_overrides` in POST /matches. Nothing persists to DB.
+
+#### Flow:
+- **Screen init**: `LoadMatchFilters` returns `location_filter.saved_locations[]` for seekers
+- **Location chip appears**: first saved location name as label (seeker-only)
+- **User taps chip**: bottom sheet shows saved locations as toggleable chips (all active by default)
+- **User taps "Add area"**: search field appears, calls `GET /api/locations/areas/search?q=...&city=...`; popular areas loaded from `GET /api/locations/areas?city=...` as fallback
+- **User applies**: `PostFilteredMatches` fires with `location_overrides[]` (saved use `location_id`, new use `lat`/`lng`)
+- **User resets**: no overrides sent → backend uses saved locations (default behavior)
+- **User leaves screen**: all ephemeral locations discarded, filter resets
+
+#### API Endpoints:
+- `GET /api/flats/match-filters` — now includes `location_filter` for seekers
+- `POST /api/flats/matches` — body `{ filters: [...], location_overrides: [{location_id, radius_km} | {lat, lng, radius_km, name}] }`
+- `GET /api/locations/areas?city=...` — browse popular areas
+- `GET /api/locations/areas/search?q=...&city=...` — search areas by name
+
+#### Files Created:
+- `lib/features/matching/widgets/location_filter_sheet.dart` — bottom sheet with saved location toggles + area search
+
+#### Files Modified:
+- `lib/features/matching/model/filter_model.dart` — added `SavedLocation`, `LocationFilter`, `LocationOverride`; updated `MatchFiltersResponse`
+- `lib/features/matching/bloc/matching_event.dart` — added `locationOverrides` to `PostFilteredMatches`
+- `lib/features/matching/repository/matching_repository.dart` — added `locationOverrides` to `postMatches()`, `browseAreas()`, `searchAreas()`
+- `lib/features/matching/bloc/matching_bloc.dart` — passes `locationOverrides` through
+- `lib/core/config/api_config.dart` — added `locationAreasSearch` endpoint
+- `lib/features/matching/widgets/match_filter_chips.dart` — optional location chip (seeker-only)
+- `lib/features/matching/view/seeker_map_screen.dart` — location state, chip tap, sheet callback, POST with overrides
+
+---
+
+**Last Updated:** 2026-03-02
+**Current Phase:** Phase 6 (Matches API Integration) + Match Question Filters + Seeker Location Filter

@@ -1,14 +1,17 @@
 /// Matching BLoC
 /// 
-/// Manages match fetching and filtering.
+/// Manages match fetching, filtering, and question-based filter loading.
 /// 
 /// Features:
 /// - Loads matches from API (role-based: SEEKER gets flats, LISTER gets seekers)
+/// - Loads question filters (GET /match-filters) in parallel with matches
+/// - Posts filtered matches (POST /matches) when user applies filter selections
 /// - Handles pagination
 /// - Supports filtering
 /// - Caches last request parameters for refresh
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../model/filter_model.dart';
 import '../repository/matching_repository.dart';
 import 'matching_event.dart';
 import 'matching_state.dart';
@@ -19,6 +22,9 @@ class MatchingBloc extends Bloc<MatchingEvent, MatchingState> {
   // Cache last request parameters for refresh
   LoadMatches? _lastRequest;
 
+  // Cached filter config for access by UI
+  MatchFiltersResponse? filterConfig;
+
   MatchingBloc({required MatchingRepository repository})
       : _repository = repository,
         super(MatchingInitial()) {
@@ -26,6 +32,8 @@ class MatchingBloc extends Bloc<MatchingEvent, MatchingState> {
     on<RefreshMatches>(_onRefreshMatches);
     on<ApplyFilters>(_onApplyFilters);
     on<ResetMatches>(_onReset);
+    on<LoadMatchFilters>(_onLoadMatchFilters);
+    on<PostFilteredMatches>(_onPostFilteredMatches);
   }
 
   /// Load matches from API
@@ -107,6 +115,50 @@ class MatchingBloc extends Bloc<MatchingEvent, MatchingState> {
     Emitter<MatchingState> emit,
   ) {
     _lastRequest = null;
+    filterConfig = null;
     emit(MatchingInitial());
+  }
+
+  /// Load question-based match filters
+  Future<void> _onLoadMatchFilters(
+    LoadMatchFilters event,
+    Emitter<MatchingState> emit,
+  ) async {
+    try {
+      final response = await _repository.getMatchFilters();
+      filterConfig = response;
+      emit(MatchFiltersLoaded(filtersResponse: response));
+    } catch (e) {
+      print('[MatchingBloc] Error loading match filters: $e');
+    }
+  }
+
+  /// Post matches with user-selected filters
+  Future<void> _onPostFilteredMatches(
+    PostFilteredMatches event,
+    Emitter<MatchingState> emit,
+  ) async {
+    emit(MatchingLoading());
+
+    try {
+      final response = await _repository.postMatches(
+        radiusKm: event.radiusKm,
+        flatId: event.flatId,
+        skip: event.skip,
+        limit: event.limit,
+        filters: event.filters,
+        locationOverrides: event.locationOverrides,
+      );
+
+      emit(MatchingLoaded(
+        response: response,
+        type: response.type,
+        total: response.total,
+        radiusKm: event.radiusKm,
+        locationsSearched: response.locationsSearched,
+      ));
+    } catch (e) {
+      emit(MatchingError(message: e.toString()));
+    }
   }
 }
