@@ -46,7 +46,7 @@ class LinkedInAuthBloc extends Bloc<LinkedInAuthEvent, LinkedInAuthState> {
     GoogleLoginRequested event,
     Emitter<LinkedInAuthState> emit,
   ) async {
-    emit(LinkedInAuthLoading());
+    emit(GoogleAuthLoading());
 
     final result = await _authRepository.loginWithGoogle();
 

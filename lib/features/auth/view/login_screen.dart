@@ -42,7 +42,9 @@ class LoginScreen extends StatelessWidget {
         },
         child: BlocBuilder<LinkedInAuthBloc, LinkedInAuthState>(
           builder: (context, state) {
-            final isLoading = state is LinkedInAuthLoading;
+            final isLinkedInLoading = state is LinkedInAuthLoading;
+            final isGoogleLoading = state is GoogleAuthLoading;
+            final anyLoading = isLinkedInLoading || isGoogleLoading;
             
             return SafeArea(
               child: LayoutBuilder(
@@ -76,8 +78,8 @@ class LoginScreen extends StatelessWidget {
                             AppButton.auth(
                               label: 'Continue with LinkedIn',
                               icon: _LinkedInIcon(),
-                              isLoading: isLoading,
-                              onTap: () => _handleLinkedInLogin(context),
+                              isLoading: isLinkedInLoading,
+                              onTap: anyLoading ? null : () => _handleLinkedInLogin(context),
                             ),
 
                             const SizedBox(height: 14),
@@ -86,8 +88,8 @@ class LoginScreen extends StatelessWidget {
                             AppButton.auth(
                               label: 'Continue with Google',
                               icon: _GoogleIcon(),
-                              isLoading: isLoading,
-                              onTap: () => _handleGoogleLogin(context),
+                              isLoading: isGoogleLoading,
+                              onTap: anyLoading ? null : () => _handleGoogleLogin(context),
                             ),
                             
                             const SizedBox(height: 24),
@@ -206,8 +208,8 @@ class _GoogleIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 20,
-      height: 20,
+      width: 26,
+      height: 26,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
@@ -217,7 +219,7 @@ class _GoogleIcon extends StatelessWidget {
           'G',
           style: TextStyle(
             color: Color(0xFF4285F4),
-            fontSize: 14,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
         ),
