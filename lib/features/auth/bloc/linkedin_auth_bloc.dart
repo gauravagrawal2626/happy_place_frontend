@@ -23,6 +23,7 @@ class LinkedInAuthBloc extends Bloc<LinkedInAuthEvent, LinkedInAuthState> {
       : _authRepository = authRepository ?? AuthRepository(),
         super(LinkedInAuthInitial()) {
     on<LinkedInLoginRequested>(_onLinkedInLoginRequested);
+    on<GoogleLoginRequested>(_onGoogleLoginRequested);
     on<LinkedInLogoutRequested>(_onLinkedInLogoutRequested);
     _log('LinkedInAuthBloc initialized');
   }
@@ -39,6 +40,28 @@ class LinkedInAuthBloc extends Bloc<LinkedInAuthEvent, LinkedInAuthState> {
     Emitter<LinkedInAuthState> emit,
   ) async {
     emit(LinkedInAuthLoading());
+  }
+
+  Future<void> _onGoogleLoginRequested(
+    GoogleLoginRequested event,
+    Emitter<LinkedInAuthState> emit,
+  ) async {
+    emit(LinkedInAuthLoading());
+
+    final result = await _authRepository.loginWithGoogle();
+
+    if (result.isSuccess && result.data != null) {
+      _log('Google login successful');
+      final authData = result.data!;
+      _authResponse = authData;
+      await _authRepository.saveAuthData(authData);
+      emit(GoogleAuthSuccess(authResponse: authData));
+    } else {
+      _log('Google login failed: ${result.errorMessage}');
+      emit(LinkedInAuthFailure(
+        error: result.errorMessage ?? 'Google authentication failed',
+      ));
+    }
   }
 
   Future<void> _onLinkedInLogoutRequested(

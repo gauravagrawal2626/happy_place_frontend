@@ -59,6 +59,14 @@
 				<string>com.happyplace</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.221443030693-miirdiqpmfr7aoq4dve044g11cqi90o2</string>
+			</array>
+		</dict>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
@@ -98,5 +106,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>GIDClientID</key>
+	<string>221443030693-miirdiqpmfr7aoq4dve044g11cqi90o2.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>221443030693-cq8pm33vnkkhl7gfh5sohtjsp85fmbc1.apps.googleusercontent.com</string>
 </dict>
 </plist>

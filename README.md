@@ -795,5 +795,47 @@ Ephemeral location filter for seekers on the match screen. Allows toggling saved
 
 ---
 
+### Google Sign-In (Added)
+
+Google OAuth login alongside existing LinkedIn login. Uses `google_sign_in` package (native SDK) — not Firebase. Backend receives a Google ID token and verifies it server-side.
+
+#### Flow:
+- User taps "Continue with Google" on the login screen
+- `google_sign_in` SDK presents the native Google sign-in sheet
+- On success, the SDK returns an **ID token** (via `serverClientId` = Web client ID)
+- Frontend sends `{ "provider": "google", "auth_token": "<ID_TOKEN>" }` to `POST /api/auth/login`
+- Backend verifies the ID token (signature, aud, iss, exp), maps to user, returns JWT + user info
+- BLoC saves auth data and navigates based on `onboarding_completed`
+
+#### Env Variables:
+- `GOOGLE_WEB_CLIENT_ID` — Web OAuth client ID (used as `serverClientId` in Flutter to obtain ID token)
+- `GOOGLE_IOS_CLIENT_ID` — iOS OAuth client ID (registered in Google Cloud Console for the iOS bundle)
+
+#### Google Cloud Console Setup:
+- **iOS client**: Bundle ID = `com.example.happyPlaceFrontend`
+- **Android client (debug)**: Package name = `com.example.happyPlaceFrontend`, SHA-1 from `~/.android/debug.keystore`
+- **Android client (release)**: Same package name, SHA-1 from `~/happyplace-release.jks`
+- **Web client**: Used for `serverClientId` — no origins/redirects needed for mobile-only
+
+#### Files Modified:
+- `pubspec.yaml` — added `google_sign_in: ^6.2.1`
+- `lib/core/config/env_config.dart` — added `googleWebClientId`, `googleIosClientId`
+- `ios/Runner/Info.plist` — added reversed iOS client ID URL scheme
+- `lib/features/auth/repository/auth_repository.dart` — added `loginWithGoogle()` method
+- `lib/features/auth/bloc/linkedin_auth_event.dart` — added `GoogleLoginRequested` event
+- `lib/features/auth/bloc/linkedin_auth_state.dart` — added `GoogleAuthSuccess` state
+- `lib/features/auth/bloc/linkedin_auth_bloc.dart` — added `_onGoogleLoginRequested` handler
+- `lib/features/auth/view/login_screen.dart` — added Google button + handler + GoogleAuthSuccess listener
+
+#### Android Signing (for Google OAuth):
+- `android/app/build.gradle.kts` — configured release signing from `key.properties`
+- `android/key.properties` — contains keystore path/password (gitignored)
+- `.gitignore` — added `android/key.properties` and `*.jks`
+
+#### Backend Requirement:
+- `POST /api/auth/login` must handle `provider: "google"` — verify ID token using Google's public keys, check `aud` matches Web client ID, `iss` is `accounts.google.com`, token not expired. Map Google email/sub to user, return JWT.
+
+---
+
 **Last Updated:** 2026-03-02
-**Current Phase:** Phase 6 (Matches API Integration) + Match Question Filters + Seeker Location Filter
+**Current Phase:** Phase 6 (Matches API Integration) + Match Question Filters + Seeker Location Filter + Google Sign-In

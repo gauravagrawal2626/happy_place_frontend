@@ -27,8 +27,12 @@ class LoginScreen extends StatelessWidget {
       child: BlocListener<LinkedInAuthBloc, LinkedInAuthState>(
         listener: (context, state) {
           if (state is LinkedInAuthSuccess) {
-            // Notify AppBloc that user is authenticated
-            // The router will handle navigation based on onboarding status
+            context.read<AppBloc>().add(
+              AppUserAuthenticated(
+                onboardingCompleted: state.authResponse.onboardingCompleted,
+              ),
+            );
+          } else if (state is GoogleAuthSuccess) {
             context.read<AppBloc>().add(
               AppUserAuthenticated(
                 onboardingCompleted: state.authResponse.onboardingCompleted,
@@ -68,12 +72,22 @@ class LoginScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 48),
                             
-                            // LinkedIn Button - using reusable AppButton
+                            // LinkedIn Button
                             AppButton.auth(
                               label: 'Continue with LinkedIn',
                               icon: _LinkedInIcon(),
                               isLoading: isLoading,
                               onTap: () => _handleLinkedInLogin(context),
+                            ),
+
+                            const SizedBox(height: 14),
+
+                            // Google Button
+                            AppButton.auth(
+                              label: 'Continue with Google',
+                              icon: _GoogleIcon(),
+                              isLoading: isLoading,
+                              onTap: () => _handleGoogleLogin(context),
                             ),
                             
                             const SizedBox(height: 24),
@@ -122,6 +136,10 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _handleGoogleLogin(BuildContext context) {
+    context.read<LinkedInAuthBloc>().add(GoogleLoginRequested());
   }
 
   void _handleLinkedInLogin(BuildContext context) {
@@ -175,6 +193,31 @@ class _LinkedInIcon extends StatelessWidget {
           style: TextStyle(
             color: Colors.white,
             fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Google "G" logo icon
+class _GoogleIcon extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
+      child: const Center(
+        child: Text(
+          'G',
+          style: TextStyle(
+            color: Color(0xFF4285F4),
+            fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
         ),

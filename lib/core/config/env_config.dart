@@ -24,4 +24,10 @@ class EnvConfig {
   static String get linkedInClientId => _trimmed(dotenv.maybeGet('LINKEDIN_CLIENT_ID')) ?? '';
   static String get linkedInClientSecret => _trimmed(dotenv.maybeGet('LINKEDIN_CLIENT_SECRET')) ?? '';
   static String get linkedInRedirectUri => _trimmed(dotenv.maybeGet('LINKEDIN_REDIRECT_URI')) ?? '';
+
+  /// Google Sign-In (from .env).
+  /// Web client ID is used as serverClientId so we get an ID token for backend verification.
+  /// iOS client ID is the native OAuth client registered for the iOS bundle.
+  static String get googleWebClientId => _trimmed(dotenv.maybeGet('GOOGLE_WEB_CLIENT_ID')) ?? '';
+  static String get googleIosClientId => _trimmed(dotenv.maybeGet('GOOGLE_IOS_CLIENT_ID')) ?? '';
 }

@@ -1,16 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/config/api_config.dart';
+import '../../../core/config/env_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../model/auth_response.dart';
 
-/// Auth Repository
-/// 
-/// Handles all authentication-related API calls and session persistence.
-/// - LinkedIn login
-/// - Logout
-/// - Token management
-/// - Session persistence (save/restore from secure storage)
 class AuthRepository {
   final ApiClient _apiClient;
   final SecureStorage _secureStorage;
@@ -67,6 +62,60 @@ class AuthRepository {
     } else {
       _log('❌ Login failed: ${response.errorMessage}');
       return AuthResult.failure(response.errorMessage ?? 'Login failed');
+    }
+  }
+
+  /// Login with Google Sign-In
+  ///
+  /// Uses the google_sign_in package to get a Google ID token, then sends
+  /// it to the backend with provider = "google" for verification & JWT issuance.
+  Future<AuthResult> loginWithGoogle() async {
+    _log('Login with Google');
+
+    try {
+      final googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: EnvConfig.googleWebClientId,
+      );
+
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        return AuthResult.failure('Google sign-in cancelled');
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        return AuthResult.failure('Failed to get Google ID token');
+      }
+
+      _log('Got Google ID token, sending to backend...');
+
+      final response = await _apiClient.post(
+        ApiConfig.authLogin,
+        body: {
+          'provider': 'google',
+          'auth_token': idToken,
+        },
+      );
+
+      if (response.isSuccess && response.data != null) {
+        try {
+          final authResponse = AuthResponse.fromJson(response.data);
+          _log('Google auth successful: ${authResponse.fullName}');
+          _apiClient.setAuthToken(authResponse.token);
+          return AuthResult.success(authResponse);
+        } catch (e) {
+          _log('Failed to parse response: $e');
+          return AuthResult.failure('Failed to parse auth response: $e');
+        }
+      } else {
+        _log('Google login failed: ${response.errorMessage}');
+        return AuthResult.failure(response.errorMessage ?? 'Google login failed');
+      }
+    } catch (e) {
+      _log('Google sign-in error: $e');
+      return AuthResult.failure('Google sign-in error: $e');
     }
   }
 

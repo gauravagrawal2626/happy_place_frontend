@@ -17,6 +17,12 @@ class LinkedInAuthSuccess extends LinkedInAuthState {
   });
 }
 
+class GoogleAuthSuccess extends LinkedInAuthState {
+  final AuthResponse authResponse;
+
+  GoogleAuthSuccess({required this.authResponse});
+}
+
 class LinkedInAuthFailure extends LinkedInAuthState {
   final String error;
   LinkedInAuthFailure({required this.error});
