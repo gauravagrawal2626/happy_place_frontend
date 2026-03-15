@@ -104,7 +104,7 @@ To switch environments, change `baseUrl` and rebuild the app.
 - [x] Create reusable components
   - [x] `AppButton` (primary action button with outline variant)
   - [x] `ChipButton` (chip/tag selection)
-  - [x] `ImageOptionCard` (image/icon options with S3 support)
+  - [x] `ImageOptionCard` (image/icon options with S3/CDN PNG + local asset support)
   - [x] `ProgressIndicatorWidget` (linear progress bar)
   - [x] `QuestionHeader` (tertiary/primary/secondary text hierarchy)
   - [x] `TextInputField` (text input with validation)

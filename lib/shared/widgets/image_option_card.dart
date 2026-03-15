@@ -1,13 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// Image Option Card - Reusable Component
-/// 
+///
 /// Used for image/icon grid options with:
-/// - S3 image URL support
-/// - Fallback icons
+/// - S3/CDN image URL support (PNG, JPEG)
+/// - Local asset support (assets/images/...)
+/// - Fallback icons when image missing or load fails
 /// - Selection state
-/// - Configurable size
 class ImageOptionCard extends StatelessWidget {
   final String text;
   final String? imageUrl;
@@ -28,6 +29,10 @@ class ImageOptionCard extends StatelessWidget {
     this.fontSize = 13,
   });
 
+  static bool _isAssetPath(String url) {
+    return url.startsWith('assets/') || url.startsWith('asset/');
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -35,12 +40,11 @@ class ImageOptionCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Image/Icon container
           Container(
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.textDark : Colors.white,
+              color: isSelected ? AppColors.optionCardSelected : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
             ),
             child: ClipRRect(
@@ -49,8 +53,6 @@ class ImageOptionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          
-          // Label
           SizedBox(
             width: size + 20,
             child: Text(
@@ -58,7 +60,7 @@ class ImageOptionCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
-                color: isSelected 
+                color: isSelected
                     ? AppColors.textDark
                     : AppColors.textDark.withOpacity(0.8),
               ),
@@ -73,43 +75,60 @@ class ImageOptionCard extends StatelessWidget {
   }
 
   Widget _buildContent() {
-    if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return Image.network(
-        imageUrl!,
+    if (imageUrl == null || imageUrl!.isEmpty) {
+      return _buildFallbackIcon();
+    }
+    final url = imageUrl!;
+
+    if (_isAssetPath(url)) {
+      return Image.asset(
+        url,
         width: size * 0.75,
         height: size * 0.75,
         fit: BoxFit.contain,
-        color: isSelected ? Colors.white : null,
-        colorBlendMode: isSelected ? BlendMode.srcIn : null,
-        errorBuilder: (context, error, stackTrace) => _buildFallbackIcon(),
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
-                color: isSelected ? Colors.white : AppColors.textDark,
-              ),
-            ),
-          );
-        },
+        errorBuilder: (_, __, ___) => _buildFallbackIcon(),
       );
     }
-    return _buildFallbackIcon();
+
+    return Image.network(
+      url,
+      headers: const {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+      },
+      width: size * 0.75,
+      height: size * 0.75,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('[ImageOptionCard] "$text" load failed: $error');
+        return _buildFallbackIcon();
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+              color: isSelected ? AppColors.textDark : AppColors.textDark,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildFallbackIcon() {
-    return Icon(
-      fallbackIcon ?? Icons.image_outlined,
-      size: size * 0.5,
-      color: isSelected ? Colors.white : AppColors.textDark,
+    return Center(
+      child: Icon(
+        fallbackIcon ?? Icons.image_outlined,
+        size: size * 0.5,
+        color: isSelected ? AppColors.textDark : AppColors.textDark,
+      ),
     );
   }
 }
-

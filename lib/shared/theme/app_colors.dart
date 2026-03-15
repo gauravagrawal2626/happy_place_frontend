@@ -26,6 +26,9 @@ class AppColors {
   static const cardBackground = Color(0xFFFFFFFF);
   static const cardShadow = Color(0x1A000000); // 10% black for shadows
   
+  // Image option card selected state (#3C3C43 at 60% opacity)
+  static Color get optionCardSelected => const Color(0xFF3C3C43).withOpacity(0.6);
+  
   // Status/Feedback
   static const success = Color(0xFF4CAF50); // Green
   static const warning = Color(0xFFFF9800); // Orange

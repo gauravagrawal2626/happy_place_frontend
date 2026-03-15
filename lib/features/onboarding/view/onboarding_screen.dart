@@ -200,6 +200,7 @@ class _OnboardingContent extends StatelessWidget {
     final question = state.currentQuestion;
     final currentAnswer = state.getCurrentAnswer();
     final progress = (state.currentQuestionIndex + 1) / state.questions.length;
+    debugPrint('[Onboarding] Q${state.currentQuestionIndex + 1}/${state.questions.length}: ${question.primaryText} (${question.type})');
 
     return SafeArea(
       child: Column(

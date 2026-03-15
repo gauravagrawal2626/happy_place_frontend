@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/question_header.dart';
 import '../../../shared/widgets/image_option_card.dart';
@@ -127,6 +128,7 @@ class _ImageMcqQuestionState extends State<ImageMcqQuestion> {
   }
 
   Widget _buildOptionsGrid(int columns, double cardSize, double fontSize) {
+    debugPrint('[ImageMcqQuestion] ${widget.question.primaryText} | options with image_url: ${widget.question.options.where((o) => o.imageUrl != null && o.imageUrl!.isNotEmpty).length}/${widget.question.options.length}');
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
