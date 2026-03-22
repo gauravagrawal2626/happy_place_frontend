@@ -110,5 +110,7 @@
 	<string>221443030693-miirdiqpmfr7aoq4dve044g11cqi90o2.apps.googleusercontent.com</string>
 	<key>GIDServerClientID</key>
 	<string>221443030693-cq8pm33vnkkhl7gfh5sohtjsp85fmbc1.apps.googleusercontent.com</string>
+	<key>com.posthog.posthog.AUTO_INIT</key>
+	<false/>
 </dict>
 </plist>

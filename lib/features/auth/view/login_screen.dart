@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:linkedin_login/linkedin_login.dart';
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_event.dart';
 import '../../../utils/linkedin_auth_helper.dart';
@@ -141,10 +146,22 @@ class LoginScreen extends StatelessWidget {
   }
 
   void _handleGoogleLogin(BuildContext context) {
+    unawaited(
+      context.read<AnalyticsFacade>().button(
+            AnalyticsButtonNames.loginGoogle,
+            screenName: AnalyticsScreenNames.login,
+          ),
+    );
     context.read<LinkedInAuthBloc>().add(GoogleLoginRequested());
   }
 
   void _handleLinkedInLogin(BuildContext context) {
+    unawaited(
+      context.read<AnalyticsFacade>().button(
+            AnalyticsButtonNames.loginLinkedIn,
+            screenName: AnalyticsScreenNames.login,
+          ),
+    );
                           final bloc = context.read<LinkedInAuthBloc>();
                           bloc.add(LinkedInLoginRequested());
 

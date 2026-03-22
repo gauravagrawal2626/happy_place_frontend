@@ -3,9 +3,14 @@
 /// Screen for entering WhatsApp/phone number before OTP verification
 /// Design: Light blue background, phone input field, "Send OTP" button
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -49,6 +54,13 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
 
   void _handleSendOTP() {
     if (!_isValid) return;
+
+    unawaited(
+      context.read<AnalyticsFacade>().button(
+            AnalyticsButtonNames.phoneSendOtp,
+            screenName: AnalyticsScreenNames.phoneInput,
+          ),
+    );
 
     final phoneNumber = _phoneController.text.trim();
     // Ensure phone number is in E.164 format (+country code)

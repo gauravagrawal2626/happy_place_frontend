@@ -30,7 +30,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.happy_place_frontend"
-        minSdk = flutter.minSdkVersion
+        // PostHog Flutter requires min SDK 21
+        minSdk = maxOf(21, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

@@ -7,9 +7,14 @@
 /// Shows "Finding your happy place" with spinner
 /// After delay (or API call), navigates to appropriate destination
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_event.dart';
 import '../../../core/bloc/app_state.dart';
@@ -59,6 +64,9 @@ class _FindingMatchesContent extends StatefulWidget {
   State<_FindingMatchesContent> createState() => _FindingMatchesScreenState();
 }
 
+/// How navigation from [FindingMatchesScreen] was triggered (for analytics).
+enum _FindingMatchesNavTrigger { auto, userSkip, userContinueAnyway }
+
 class _FindingMatchesScreenState extends State<_FindingMatchesContent> {
   bool _isNavigating = false;
   bool _waitingForOnboardingUpdate = false;
@@ -90,8 +98,32 @@ class _FindingMatchesScreenState extends State<_FindingMatchesContent> {
     });
   }
 
-  void _navigateToDestination() {
+  /// [trigger] is `auto` when matches loaded successfully (no button event).
+  /// Use `userSkip` / `userContinueAnyway` only for explicit taps.
+  void _navigateToDestination(
+      [_FindingMatchesNavTrigger trigger = _FindingMatchesNavTrigger.auto]) {
     if (_isNavigating) return;
+
+    switch (trigger) {
+      case _FindingMatchesNavTrigger.userSkip:
+        unawaited(
+          context.read<AnalyticsFacade>().button(
+                AnalyticsButtonNames.findingMatchesSkip,
+                screenName: AnalyticsScreenNames.findingMatches,
+              ),
+        );
+        break;
+      case _FindingMatchesNavTrigger.userContinueAnyway:
+        unawaited(
+          context.read<AnalyticsFacade>().button(
+                AnalyticsButtonNames.findingMatchesContinueAnyway,
+                screenName: AnalyticsScreenNames.findingMatches,
+              ),
+        );
+        break;
+      case _FindingMatchesNavTrigger.auto:
+        break;
+    }
 
     // If coming from location flow, mark onboarding as complete
     // Then wait for state update before navigating to avoid router redirect race condition
@@ -158,7 +190,9 @@ class _FindingMatchesScreenState extends State<_FindingMatchesContent> {
                 action: SnackBarAction(
                   label: 'Continue Anyway',
                   textColor: Colors.white,
-                  onPressed: _navigateToDestination,
+                  onPressed: () => _navigateToDestination(
+                        _FindingMatchesNavTrigger.userContinueAnyway,
+                      ),
                 ),
               ),
             );
@@ -212,7 +246,8 @@ class _FindingMatchesScreenState extends State<_FindingMatchesContent> {
                     
                     // Skip button
                     TextButton(
-                      onPressed: _navigateToDestination,
+                      onPressed: () =>
+                          _navigateToDestination(_FindingMatchesNavTrigger.userSkip),
                       child: const Text(
                         'Not now',
                         style: TextStyle(

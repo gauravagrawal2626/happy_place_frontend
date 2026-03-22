@@ -3,8 +3,13 @@
 /// Shows public profile (name, age, gender, lifestyle tags, top priorities,
 /// weekend activities) with Send Request and Skip. Used from Seeker map and Lister list.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/analytics/analytics_button_names.dart';
+import '../../core/analytics/analytics_facade.dart';
+import '../../core/analytics/analytics_screen_names.dart';
 import '../../features/profile/model/public_profile_model.dart';
 import '../../features/profile/repository/profile_repository.dart';
 import '../../features/profile/repository/requests_repository.dart';
@@ -122,8 +127,27 @@ class _ProfileModalState extends State<ProfileModal> {
     return {};
   }
 
+  String _analyticsNameForRequestButton(RequestStatusButton b) {
+    final lower = b.text.toLowerCase();
+    if (lower.contains('send')) return AnalyticsButtonNames.sendRequest;
+    if (lower.contains('accept')) return AnalyticsButtonNames.acceptRequest;
+    if (lower.contains('reject')) return AnalyticsButtonNames.rejectRequest;
+    if (lower.contains('complete')) return AnalyticsButtonNames.completeMatch;
+    return AnalyticsButtonNames.profileRequestOther;
+  }
+
   Future<void> _onButtonPressed(RequestStatusButton button) async {
     if (!button.isClickable || _sendingAction != null) return;
+    final mapped = _analyticsNameForRequestButton(button);
+    unawaited(
+      context.read<AnalyticsFacade>().button(
+            mapped,
+            screenName: AnalyticsScreenNames.profileModal,
+            extra: mapped == AnalyticsButtonNames.profileRequestOther
+                ? {'button_label': button.text}
+                : null,
+          ),
+    );
     final action = button.action!.trim();
     setState(() => _sendingAction = action);
     try {
@@ -199,11 +223,27 @@ class _ProfileModalState extends State<ProfileModal> {
                   ),
                   const SizedBox(height: 24),
                   TextButton(
-                    onPressed: () => _loadProfile(),
+                    onPressed: () {
+                      unawaited(
+                        context.read<AnalyticsFacade>().button(
+                              AnalyticsButtonNames.profileModalRetry,
+                              screenName: AnalyticsScreenNames.profileModal,
+                            ),
+                      );
+                      _loadProfile();
+                    },
                     child: const Text('Retry'),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      unawaited(
+                        context.read<AnalyticsFacade>().button(
+                              AnalyticsButtonNames.profileModalSkip,
+                              screenName: AnalyticsScreenNames.profileModal,
+                            ),
+                      );
+                      Navigator.of(context).pop();
+                    },
                     child: const Text('Skip'),
                   ),
                 ],
@@ -247,7 +287,17 @@ class _ProfileModalState extends State<ProfileModal> {
                   onPressed: _onButtonPressed,
                 ),
                 const SizedBox(height: 12),
-                ProfileSkipButton(onPressed: () => Navigator.of(context).pop()),
+                ProfileSkipButton(
+                  onPressed: () {
+                    unawaited(
+                      context.read<AnalyticsFacade>().button(
+                            AnalyticsButtonNames.profileModalSkip,
+                            screenName: AnalyticsScreenNames.profileModal,
+                          ),
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
               ],
             ),
           );

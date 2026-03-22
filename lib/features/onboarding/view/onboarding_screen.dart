@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/progress_indicator_widget.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -250,7 +255,16 @@ class _OnboardingContent extends StatelessWidget {
                     TextButton(
                       onPressed: _isAnswerValid(question, currentAnswer)
                           ? () {
-                              if (state.isLastQuestion) {
+                              final isSubmit = state.isLastQuestion;
+                              unawaited(
+                                context.read<AnalyticsFacade>().button(
+                                      isSubmit
+                                          ? AnalyticsButtonNames.onboardingSubmit
+                                          : AnalyticsButtonNames.onboardingNext,
+                                      screenName: AnalyticsScreenNames.onboarding,
+                                    ),
+                              );
+                              if (isSubmit) {
                                 context.read<OnboardingBloc>().add(SubmitOnboarding());
                               } else {
                                 context.read<OnboardingBloc>().add(NextQuestion());

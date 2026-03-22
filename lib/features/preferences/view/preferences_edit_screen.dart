@@ -3,9 +3,14 @@
 /// Allows users to edit their flatmate preferences after onboarding.
 /// Shows all questions with show_in_preferences: true in a list view.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_state.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -428,6 +433,12 @@ class _PreferencesEditContent extends StatelessWidget {
             child: ElevatedButton(
               onPressed: state.hasChanges
                   ? () {
+                      unawaited(
+                        context.read<AnalyticsFacade>().button(
+                              AnalyticsButtonNames.savePreferences,
+                              screenName: AnalyticsScreenNames.preferencesEdit,
+                            ),
+                      );
                       context.read<PreferencesBloc>().add(SubmitPreferences());
                     }
                   : null,

@@ -10,11 +10,15 @@
 /// - Photo upload (LISTER only)
 /// - Pre-population from existing data
 
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_state.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -1081,6 +1085,12 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
+                unawaited(
+                  context.read<AnalyticsFacade>().button(
+                        AnalyticsButtonNames.saveFlatDetails,
+                        screenName: AnalyticsScreenNames.flatRequirements,
+                      ),
+                );
                 context.read<FlatBloc>().add(
                   SubmitFlatData(userRole: widget.userRole),
                 );

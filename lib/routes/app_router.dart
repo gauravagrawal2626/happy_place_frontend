@@ -31,10 +31,15 @@ import '../features/profile/view/invites_screen.dart';
 /// - Authenticated without onboarding → redirect to /onboarding
 /// - Authenticated with onboarding → can access /home
 
-/// Create router based on current app state
-GoRouter createRouter(AppState appState) {
+/// Create router based on current app state.
+/// Pass [observers] (e.g. [AnalyticsNavigatorObserver]) for automatic screen analytics.
+GoRouter createRouter(
+  AppState appState, {
+  List<NavigatorObserver> observers = const [],
+}) {
   return GoRouter(
     initialLocation: _getInitialLocation(appState),
+    observers: observers.isEmpty ? null : observers,
     redirect: (context, state) {
       // Read current AppBloc state from context (always up-to-date)
       final currentAppState = context.read<AppBloc>().state;

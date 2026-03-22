@@ -8,6 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -118,6 +121,13 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   void _verifyOTP() {
     if (!_isOTPComplete()) return;
 
+    unawaited(
+      context.read<AnalyticsFacade>().button(
+            AnalyticsButtonNames.phoneVerifyOtp,
+            screenName: AnalyticsScreenNames.phoneVerify,
+          ),
+    );
+
     final otp = _getOTP();
     context.read<PhoneVerificationBloc>().add(
           VerifyOTPEvent(
@@ -130,6 +140,13 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
   void _handleResend() {
     if (!_canResend) return;
+
+    unawaited(
+      context.read<AnalyticsFacade>().button(
+            AnalyticsButtonNames.phoneResendOtp,
+            screenName: AnalyticsScreenNames.phoneVerify,
+          ),
+    );
 
     context.read<PhoneVerificationBloc>().add(
           ResendOTPEvent(
@@ -225,7 +242,15 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                       ),
                       const SizedBox(height: 48),
                       TextButton(
-                        onPressed: () => context.go('/onboarding'),
+                        onPressed: () {
+                          unawaited(
+                            context.read<AnalyticsFacade>().button(
+                                  AnalyticsButtonNames.phoneVerifyNotNow,
+                                  screenName: AnalyticsScreenNames.phoneVerify,
+                                ),
+                          );
+                          context.go('/onboarding');
+                        },
                         child: const Text(
                           'Not now',
                           style: TextStyle(

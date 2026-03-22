@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/analytics/analytics_facade.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_event.dart';
 import '../../../core/bloc/app_state.dart';
@@ -22,7 +23,9 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
+            onPressed: () async {
+              await context.read<AnalyticsFacade>().logOutButtonTap();
+              if (!context.mounted) return;
               context.read<AppBloc>().add(const AppUserLoggedOut());
               context.read<LinkedInAuthBloc>().add(LinkedInLogoutRequested());
               context.go('/login');

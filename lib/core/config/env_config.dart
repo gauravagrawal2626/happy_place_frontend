@@ -30,4 +30,10 @@ class EnvConfig {
   /// iOS client ID is the native OAuth client registered for the iOS bundle.
   static String get googleWebClientId => _trimmed(dotenv.maybeGet('GOOGLE_WEB_CLIENT_ID')) ?? '';
   static String get googleIosClientId => _trimmed(dotenv.maybeGet('GOOGLE_IOS_CLIENT_ID')) ?? '';
+
+  /// PostHog project API key (`phc_...`). Loaded from `.env` as `POSTHOG_API_CLIENT_KEY`.
+  static String? get posthogApiClientKey => _trimmed(dotenv.maybeGet('POSTHOG_API_CLIENT_KEY'));
+
+  /// PostHog ingestion host (e.g. `https://us.i.posthog.com`).
+  static String? get posthogHost => _trimmed(dotenv.maybeGet('POSTHOG_HOST'));
 }

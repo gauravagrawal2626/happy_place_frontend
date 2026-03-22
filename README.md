@@ -15,8 +15,19 @@ Copy `.env.example` to `.env` in the project root and set values as needed. **Do
 | `LINKEDIN_CLIENT_ID`     | Yes\*    | LinkedIn OAuth Client ID from `https://www.linkedin.com/developers/apps`. Used by the `linkedin_login` package. |
 | `LINKEDIN_CLIENT_SECRET` | Yes\*    | LinkedIn OAuth Client Secret. **Never commit this.** Only stored locally in `.env`. |
 | `LINKEDIN_REDIRECT_URI`  | Yes\*    | Redirect URI configured in the LinkedIn app. Must match the value in LinkedIn’s OAuth 2.0 settings. |
+| `POSTHOG_API_CLIENT_KEY` | No       | PostHog project API key. If unset, analytics is a no-op. |
+| `POSTHOG_HOST`           | No       | PostHog ingest host (e.g. `https://us.i.posthog.com`). Defaults to US cloud if unset. |
 
 \*Required only if you want LinkedIn login to work in that environment. The app will fail LinkedIn auth if these are missing.
+
+### Analytics (PostHog)
+
+- **Bootstrap:** `main()` loads `.env`, then `bootstrapAnalytics()` in [`lib/core/analytics/analytics_bootstrap.dart`](lib/core/analytics/analytics_bootstrap.dart) calls `Posthog().setup` when `POSTHOG_API_CLIENT_KEY` is set; otherwise [`NoOpAnalyticsProvider`](lib/core/analytics/noop_analytics_provider.dart).
+- **API:** Use [`AnalyticsFacade`](lib/core/analytics/analytics_facade.dart) (`screen`, `button`, `track`, `identifyUser`, `logOutButtonTap`) via `context.read<AnalyticsFacade>()`.
+- **Screen views:** [`AnalyticsNavigatorObserver`](lib/core/analytics/analytics_navigator_observer.dart) is registered on `GoRouter` in [`lib/main.dart`](lib/main.dart). Event/property/screen names live under [`lib/core/analytics/`](lib/core/analytics/).
+- **Button clicks:** Primary taps call `AnalyticsFacade.button(...)` with names from [`analytics_button_names.dart`](lib/core/analytics/analytics_button_names.dart) and `screenName` from [`analytics_screen_names.dart`](lib/core/analytics/analytics_screen_names.dart). Pilot flows: login, onboarding Next/Submit, preferences Save; extended: phone/OTP, location, map/list CTAs, finding-matches, invites, profile modal, account modal, flat save.
+- **Verify in PostHog:** With `POSTHOG_API_CLIENT_KEY` set, open **Activity → Live events** (or Events), filter by `button_clicked` and properties `button_name` / `screen_name`. Trigger a known action (e.g. LinkedIn tap on login) and confirm the event appears within a few seconds.
+- **Native:** Android/iOS disable PostHog auto-init (`AUTO_INIT=false`) so Dart owns initialization.
 
 ---
 

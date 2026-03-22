@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/analytics/analytics_button_names.dart';
+import '../../core/analytics/analytics_facade.dart';
+import '../../core/analytics/analytics_screen_names.dart';
 import '../../core/bloc/app_bloc.dart';
 import '../../core/bloc/app_event.dart';
 import '../../core/bloc/app_state.dart';
@@ -205,6 +209,12 @@ class AccountModal extends StatelessWidget {
   }
 
   void _openMyProfile(BuildContext context, AppState state) {
+    unawaited(
+      context.read<AnalyticsFacade>().button(
+            AnalyticsButtonNames.openProfile,
+            screenName: AnalyticsScreenNames.accountModal,
+          ),
+    );
     Navigator.of(context).pop();
     _openProfileInvitesSheet(context, ProfileInvitesTab.profile);
   }
@@ -219,6 +229,7 @@ class AccountModal extends StatelessWidget {
   }
 
   Future<void> _handleLogout(BuildContext context) async {
+    await context.read<AnalyticsFacade>().logOutButtonTap();
     // Clear stored data
     await SecureStorage.instance.clearAuthData();
     

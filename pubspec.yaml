@@ -56,6 +56,7 @@ dependencies:
 
   # Env variables (e.g. PLACES_API_KEY)
   flutter_dotenv: ^5.1.0
+  posthog_flutter: ^5.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

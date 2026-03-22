@@ -1,6 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import 'core/analytics/analytics_facade.dart';
+import 'core/analytics/analytics_bootstrap.dart';
+import 'core/analytics/analytics_navigator_observer.dart';
 import 'core/bloc/app_bloc.dart';
 import 'core/bloc/app_event.dart';
 import 'core/bloc/app_state.dart';
@@ -23,11 +29,14 @@ Future<void> main() async {
   } catch (_) {
     // App runs without .env (e.g. location autocomplete will use Nominatim)
   }
-  runApp(const MyApp());
+  final analyticsFacade = await bootstrapAnalytics();
+  runApp(MyApp(analyticsFacade: analyticsFacade));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.analyticsFacade});
+
+  final AnalyticsFacade analyticsFacade;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +45,7 @@ class MyApp extends StatelessWidget {
 
     return MultiRepositoryProvider(
       providers: [
+        RepositoryProvider<AnalyticsFacade>.value(value: analyticsFacade),
         // FlatRepository - handles flat requirements API calls
         RepositoryProvider<FlatRepository>(
           create: (context) => FlatRepository(apiClient: authRepository.apiClient),
@@ -93,25 +103,55 @@ class MyApp extends StatelessWidget {
                   ),
                 ),
               ],
-              child: BlocBuilder<AppBloc, AppState>(
-        builder: (context, appState) {
-          return MaterialApp.router(
-        title: 'Happy Place',
-            debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: AppColors.background,
+              child: BlocListener<AppBloc, AppState>(
+                listenWhen: (previous, current) {
+                  if (current is AppAuthenticated) return true;
+                  // Reset only when leaving an authenticated session (not on cold start).
+                  if (current is AppUnauthenticated &&
+                      previous is AppAuthenticated) {
+                    return true;
+                  }
+                  return false;
+                },
+                listener: (context, state) {
+                  final analytics = context.read<AnalyticsFacade>();
+                  if (state is AppAuthenticated) {
+                    unawaited(
+                      analytics.identifyUser(
+                        state.authResponse.userId,
+                        email: state.authResponse.email,
+                        role: state.authResponse.role,
+                      ),
+                    );
+                  } else if (state is AppUnauthenticated) {
+                    unawaited(analytics.resetSession());
+                  }
+                },
+                child: BlocBuilder<AppBloc, AppState>(
+                  builder: (context, appState) {
+                    return MaterialApp.router(
+                      title: 'Happy Place',
+                      debugShowCheckedModeBanner: false,
+                      theme: ThemeData(
+                        colorScheme: ColorScheme.fromSeed(
+                          seedColor: AppColors.background,
+                        ),
+                        useMaterial3: true,
+                        scaffoldBackgroundColor: AppColors.background,
+                      ),
+                      routerConfig: createRouter(
+                        appState,
+                        observers: [
+                          AnalyticsNavigatorObserver(analyticsFacade),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
-          useMaterial3: true,
-              scaffoldBackgroundColor: AppColors.background,
+            );
+          },
         ),
-                routerConfig: createRouter(appState),
-              );
-            },
-            ),
-          );
-        },
-      ),
     );
   }
 }

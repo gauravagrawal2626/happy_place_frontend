@@ -3,8 +3,13 @@
 /// Shows sent and received requests from GET /api/requests.
 /// Each row is clickable and opens the profile modal (with back button).
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_state.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -55,6 +60,12 @@ class _InvitesScreenState extends State<InvitesScreen> {
   }
 
   void _openProfile(RequestListItem item) {
+    unawaited(
+      context.read<AnalyticsFacade>().button(
+            AnalyticsButtonNames.invitesOpenProfile,
+            screenName: AnalyticsScreenNames.invites,
+          ),
+    );
     final state = context.read<AppBloc>().state;
     if (state is! AppAuthenticated) return;
     final role = state.authResponse.role == 'LISTER'
@@ -113,7 +124,15 @@ class _InvitesScreenState extends State<InvitesScreen> {
                         ),
                         const SizedBox(height: 24),
                         TextButton(
-                          onPressed: _load,
+                          onPressed: () {
+                            unawaited(
+                              context.read<AnalyticsFacade>().button(
+                                    AnalyticsButtonNames.invitesRetry,
+                                    screenName: AnalyticsScreenNames.invites,
+                                  ),
+                            );
+                            _load();
+                          },
                           child: const Text('Retry'),
                         ),
                       ],

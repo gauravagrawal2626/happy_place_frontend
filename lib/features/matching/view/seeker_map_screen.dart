@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart' as latlong2;
+import '../../../core/analytics/analytics_button_names.dart';
+import '../../../core/analytics/analytics_facade.dart';
+import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_event.dart';
 import '../../../core/storage/secure_storage.dart';
@@ -376,10 +381,22 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
               leftButtonText: 'Flatmate Preference',
               rightButtonText: 'Add Flat Details',
               onLeftPressed: () async {
+                unawaited(
+                  context.read<AnalyticsFacade>().button(
+                        AnalyticsButtonNames.mapFlatmatePreference,
+                        screenName: AnalyticsScreenNames.seekerMap,
+                      ),
+                );
                 await context.push('/preferences/edit');
                 if (mounted) _reloadAll(context);
               },
               onRightPressed: () async {
+                unawaited(
+                  context.read<AnalyticsFacade>().button(
+                        AnalyticsButtonNames.mapAddFlatDetails,
+                        screenName: AnalyticsScreenNames.seekerMap,
+                      ),
+                );
                 await context.push('/flat-requirements', extra: true);
                 if (mounted) _reloadAll(context);
               },
@@ -391,8 +408,21 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
             bottom: 0,
             child: AppBottomNav(
               currentIndex: 0,
-              onResultsTap: () {},
+              onResultsTap: () {
+                unawaited(
+                  context.read<AnalyticsFacade>().button(
+                        AnalyticsButtonNames.bottomNavSearchResults,
+                        screenName: AnalyticsScreenNames.seekerMap,
+                      ),
+                );
+              },
               onAccountTap: () {
+                unawaited(
+                  context.read<AnalyticsFacade>().button(
+                        AnalyticsButtonNames.bottomNavAccount,
+                        screenName: AnalyticsScreenNames.seekerMap,
+                      ),
+                );
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
