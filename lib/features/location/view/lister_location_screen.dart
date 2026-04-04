@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/bloc/app_bloc.dart';
+import '../../../core/bloc/app_state.dart';
 import '../../../services/google_places_autocomplete_service.dart';
 import '../../../services/location_autocomplete_service.dart';
 import '../model/location_model.dart';
@@ -19,9 +20,10 @@ import '../bloc/location_state.dart';
 /// Lister Location Screen - Phase 4
 /// 
 /// Flow:
-/// 1. Input exact flat location (Google Places autocomplete)
+/// 1. Input exact flat location (Google Places autocomplete when API key set;
+///    else Nominatim via [LocationAutocompleteService])
 /// 2. Show selected location as chip
-/// 3. Submit or skip
+/// 3. Submit; Skip is shown only after onboarding (revisit), not during first lister onboarding
 class ListerLocationScreen extends StatelessWidget {
   const ListerLocationScreen({super.key});
 
@@ -93,11 +95,11 @@ class _ListerLocationContentState extends State<_ListerLocationContent> {
 
     try {
       final List<LocationSuggestion> results = _googlePlacesService.isAvailable
-          ? await _googlePlacesService.search(query, limit: 5)
+          ? await _googlePlacesService.search(query, limit: 10)
           : await _autocompleteService.search(
               query,
               countryCode: 'in',
-              limit: 5,
+              limit: 10,
             );
 
       setState(() {
@@ -238,67 +240,76 @@ class _ListerLocationContentState extends State<_ListerLocationContent> {
             ),
           ),
 
-          // Bottom navigation
+          // Bottom navigation — no Skip during onboarding; lister must set location first time
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    unawaited(
-                      context.read<AnalyticsFacade>().button(
-                            AnalyticsButtonNames.locationListerSkip,
-                            screenName: AnalyticsScreenNames.listerLocation,
-                          ),
-                    );
-                    context.read<LocationBloc>().add(SkipFlatLocation());
-                  },
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: state.hasLocation
-                      ? () {
+            child: BlocBuilder<AppBloc, AppState>(
+              builder: (context, appState) {
+                final showSkip = appState is AppAuthenticated &&
+                    appState.onboardingCompleted;
+                return Row(
+                  mainAxisAlignment: showSkip
+                      ? MainAxisAlignment.spaceBetween
+                      : MainAxisAlignment.end,
+                  children: [
+                    if (showSkip)
+                      TextButton(
+                        onPressed: () {
                           unawaited(
                             context.read<AnalyticsFacade>().button(
-                                  AnalyticsButtonNames.locationListerNext,
+                                  AnalyticsButtonNames.locationListerSkip,
                                   screenName: AnalyticsScreenNames.listerLocation,
                                 ),
                           );
-                          context.read<LocationBloc>().add(SubmitDraftFlat());
-                        }
-                      : null,
-                  child: Row(
-                    children: [
-                      Text(
-                        'Next',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: state.hasLocation
-                              ? AppColors.textDark
-                              : AppColors.textDark.withOpacity(0.3),
+                          context.read<LocationBloc>().add(SkipFlatLocation());
+                        },
+                        child: const Text(
+                          'Skip',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textDark,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward,
-                        size: 20,
-                        color: state.hasLocation
-                            ? AppColors.textDark
-                            : AppColors.textDark.withOpacity(0.3),
+                    TextButton(
+                      onPressed: state.hasLocation
+                          ? () {
+                              unawaited(
+                                context.read<AnalyticsFacade>().button(
+                                      AnalyticsButtonNames.locationListerNext,
+                                      screenName: AnalyticsScreenNames.listerLocation,
+                                    ),
+                              );
+                              context.read<LocationBloc>().add(SubmitDraftFlat());
+                            }
+                          : null,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Next',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: state.hasLocation
+                                  ? AppColors.textDark
+                                  : AppColors.textDark.withOpacity(0.3),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward,
+                            size: 20,
+                            color: state.hasLocation
+                                ? AppColors.textDark
+                                : AppColors.textDark.withOpacity(0.3),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -419,6 +430,14 @@ class _ListerLocationContentState extends State<_ListerLocationContent> {
     BuildContext context,
     dynamic location, // FlatLocation
   ) {
+    final formatted = location.formattedAddress as String?;
+    final fallback = '${location.locality}, ${location.city}'
+        .replaceAll(RegExp(r'^,\s*|,\s*$'), '')
+        .replaceAll(RegExp(r',\s*,'), ',');
+    final label = (formatted != null && formatted.trim().isNotEmpty)
+        ? formatted.trim()
+        : fallback;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -426,15 +445,18 @@ class _ListerLocationContentState extends State<_ListerLocationContent> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Text(
-              '${location.locality}, ${location.city}',
+              label,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
               ),
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 8),

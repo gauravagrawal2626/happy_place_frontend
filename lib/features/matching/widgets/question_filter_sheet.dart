@@ -8,6 +8,7 @@ import '../model/filter_model.dart';
 /// Shows the question's options as tappable chips. If the selected option
 /// has inline sub-options, they appear below. Tapping an option calls
 /// [onSelected] and auto-closes the sheet.
+/// (A dedicated "Default" reset chip was removed; change selection via other options only.)
 void showQuestionFilterSheet({
   required BuildContext context,
   required QuestionFilter filter,
@@ -110,54 +111,11 @@ class _QuestionFilterSheetContentState
             ),
           ],
           const SizedBox(height: 16),
-          _buildClearOption(),
-          const SizedBox(height: 8),
           _buildOptions(filter.options, hasInlineSubs),
           if (hasInlineSubs && _selectedParent != null)
             _buildSubOptions(filter.options),
           const SizedBox(height: 8),
         ],
-      ),
-    );
-  }
-
-  Widget _buildClearOption() {
-    final isCleared = _selectedValue == null ||
-        _selectedValue == widget.filter.currentValue;
-    return GestureDetector(
-      onTap: () {
-        widget.onSelected(null);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isCleared
-              ? AppColors.textDark
-              : Colors.white.withOpacity(0.85),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.textDark.withOpacity(0.15),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.refresh,
-              size: 16,
-              color: isCleared ? Colors.white : AppColors.textDark,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Default',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: isCleared ? Colors.white : AppColors.textDark,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

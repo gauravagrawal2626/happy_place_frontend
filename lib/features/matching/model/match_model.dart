@@ -6,6 +6,9 @@
 import 'package:latlong2/latlong.dart' as latlong2;
 import '../../../features/home/widgets/real_map_widget.dart';
 
+/// Default `limit` query param for GET/POST `/api/flats/matches` until pagination UI exists.
+const int kDefaultMatchesLimit = 50;
+
 /// Flat match for SEEKER view
 class FlatMatch {
   final String id;
@@ -197,7 +200,7 @@ class MatchResponse {
       results: json['results'] as List<dynamic>? ?? [],
       total: json['total'] as int? ?? 0,
       skip: json['skip'] as int? ?? 0,
-      limit: json['limit'] as int? ?? 20,
+      limit: json['limit'] as int? ?? kDefaultMatchesLimit,
       type: json['type'] as String? ?? '',
       locationsSearched: json['locations_searched'] as int?,
     );

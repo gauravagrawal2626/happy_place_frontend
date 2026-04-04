@@ -1075,7 +1075,6 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
   }
 
   Widget _buildSubmitButton(BuildContext context, FlatLoaded state) {
-    final source = widget.isLister ? 'flat-lister' : 'flat-seeker';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 8),
       child: Column(
@@ -1115,7 +1114,7 @@ class _FlatRequirementsContentState extends State<_FlatRequirementsContent> {
           ),
           const SizedBox(height: 8),
           GestureDetector(
-            onTap: () => context.go('/finding-matches/$source'),
+            onTap: () => context.pop(false),
             child: const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text(

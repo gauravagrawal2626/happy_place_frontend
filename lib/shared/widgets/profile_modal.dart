@@ -60,19 +60,16 @@ class _ProfileModalState extends State<ProfileModal> {
   @override
   void initState() {
     super.initState();
-    debugPrint('[ProfileModal] initState userId=${widget.args.userId} flatId=${widget.args.flatId} role=${widget.args.role}');
     _loadProfile();
   }
 
   Future<void> _loadProfile() async {
-    debugPrint('[ProfileModal] _loadProfile called');
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final repo = context.read<ProfileRepository>();
-      debugPrint('[ProfileModal] calling getPublicProfile userId=${widget.args.userId} flatId=${widget.args.flatId}');
       final profile = await repo.getPublicProfile(
         widget.args.userId,
         flatId: widget.args.flatId,
@@ -80,8 +77,6 @@ class _ProfileModalState extends State<ProfileModal> {
         includeRequestStatus: true,
       );
       if (mounted) {
-        debugPrint('[ProfileModal] request_status: ${profile.requestStatus}');
-        debugPrint('[ProfileModal] requestStatusButtons: ${profile.requestStatusButtons.map((b) => '${b.text}(enabled=${b.enabled},action=${b.action})').toList()}');
         setState(() {
           _profile = profile;
           _loading = false;
@@ -181,10 +176,15 @@ class _ProfileModalState extends State<ProfileModal> {
 
   @override
   Widget build(BuildContext context) {
+    // Invites (showBackButton): Column → Expanded → sheet; 0.7 only fills bottom 70% of
+    // Expanded → ~30% empty band under back arrow. Map/list: sheet is direct child — keep 0.7.
+    final initialSheetExtent = widget.args.showBackButton ? 1.0 : 0.7;
+    final maxSheetExtent = widget.args.showBackButton ? 1.0 : 0.7;
+
     final sheet = DraggableScrollableSheet(
-        initialChildSize: 0.7,
+        initialChildSize: initialSheetExtent,
         minChildSize: 0.4,
-        maxChildSize: 0.7,
+        maxChildSize: maxSheetExtent,
         expand: false,
         builder: (context, scrollController) {
           if (_loading) {

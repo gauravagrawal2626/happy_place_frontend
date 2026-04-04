@@ -81,9 +81,14 @@ class LocationSuggestion {
     final lat = (loc['lat'] as num?)?.toDouble() ?? 0.0;
     final lng = (loc['lng'] as num?)?.toDouble() ?? 0.0;
     final formattedAddress = result['formatted_address'] as String? ?? '';
+    final name = result['name'] as String?;
     final components = result['address_components'] as List<dynamic>? ?? [];
-    String? locality;
-    String? city;
+
+    // Indian + global layouts: neighbourhood / sublocality often carries block & sector, not `locality`.
+    String? sublocality;
+    String? neighborhood;
+    String? localityFromType;
+    String? adminArea2;
     String? pincode;
     String? state;
     String? country;
@@ -91,20 +96,37 @@ class LocationSuggestion {
       final map = c as Map<String, dynamic>;
       final types = (map['types'] as List<dynamic>?)?.cast<String>() ?? [];
       final longName = map['long_name'] as String? ?? '';
-      if (types.contains('locality')) locality ??= longName;
-      if (types.contains('administrative_area_level_2')) city ??= longName;
+      if (types.contains('sublocality_level_2')) sublocality ??= longName;
+      if (types.contains('sublocality_level_1')) sublocality ??= longName;
+      if (types.contains('sublocality')) sublocality ??= longName;
+      if (types.contains('neighborhood')) neighborhood ??= longName;
+      if (types.contains('locality')) localityFromType ??= longName;
+      if (types.contains('administrative_area_level_2')) adminArea2 ??= longName;
       if (types.contains('postal_code')) pincode ??= longName;
       if (types.contains('administrative_area_level_1')) state ??= longName;
       if (types.contains('country')) country ??= longName;
     }
-    city ??= locality;
+
+    final area = sublocality ?? neighborhood;
+    final city = localityFromType ?? adminArea2;
+    final locality = (area != null && area.isNotEmpty) ? area : (localityFromType ?? adminArea2 ?? '');
+    final cityResolved = (area != null && area.isNotEmpty)
+        ? (city ?? localityFromType ?? adminArea2 ?? '')
+        : (localityFromType ?? adminArea2 ?? '');
+
+    final displayName = formattedAddress.isNotEmpty
+        ? formattedAddress
+        : (name != null && name.isNotEmpty)
+            ? name
+            : '';
+
     return LocationSuggestion(
-      displayName: formattedAddress,
+      displayName: displayName,
       location: latlong2.LatLng(lat, lng),
-      address: formattedAddress,
+      address: formattedAddress.isNotEmpty ? formattedAddress : displayName,
       placeId: null,
       locality: locality,
-      city: city,
+      city: cityResolved.isNotEmpty ? cityResolved : locality,
       pincode: pincode,
       state: state,
       country: country,

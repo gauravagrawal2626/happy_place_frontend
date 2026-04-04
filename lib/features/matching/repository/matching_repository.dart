@@ -31,7 +31,7 @@ class MatchingRepository {
     double? latitude, // Optional: For SEEKER, ignored if preferred locations exist
     double? longitude, // Optional: For SEEKER, ignored if preferred locations exist
     int skip = 0, // Pagination offset
-    int limit = 20, // Results per page
+    int limit = kDefaultMatchesLimit, // Results per page (until pagination UI)
     String? listingType, // Filter: ENTIRE_FLAT or SHARED_ROOM
     double? minRent, // Minimum rent filter
     double? maxRent, // Maximum rent filter
@@ -40,8 +40,8 @@ class MatchingRepository {
       // Build query parameters
       final queryParams = <String, String>{
         'radius_km': radiusKm.toString(),
+        'limit': limit.toString(),
         if (skip > 0) 'skip': skip.toString(),
-        if (limit != 20) 'limit': limit.toString(),
         if (flatId != null) 'flat_id': flatId,
         if (latitude != null) 'latitude': latitude.toString(),
         if (longitude != null) 'longitude': longitude.toString(),
@@ -121,15 +121,15 @@ class MatchingRepository {
     required double radiusKm,
     String? flatId,
     int skip = 0,
-    int limit = 20,
+    int limit = kDefaultMatchesLimit,
     List<FilterItem>? filters,
     List<LocationOverride>? locationOverrides,
   }) async {
     try {
       final queryParams = <String, String>{
         'radius_km': radiusKm.toString(),
+        'limit': limit.toString(),
         if (skip > 0) 'skip': skip.toString(),
-        if (limit != 20) 'limit': limit.toString(),
         if (flatId != null) 'flat_id': flatId,
       };
 

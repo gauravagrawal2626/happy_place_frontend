@@ -6,7 +6,8 @@ import '../model/filter_model.dart';
 ///
 /// Replaces the hardcoded filter chips in both lister and seeker match screens.
 /// Each chip shows the selected option label (or the question's primaryText as default).
-/// Active (changed from default) chips are highlighted with the theme color.
+/// Default and "changed" chips use the same fill (theme background); a checkmark
+/// appears when the user has changed a filter from the API default (or location overrides).
 /// Optionally shows a "Location" chip for seekers when locationFilter is provided.
 class MatchFilterChips extends StatelessWidget {
   final List<QuestionFilter> filters;
@@ -73,6 +74,7 @@ class MatchFilterChips extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     selected: isChanged,
+                    checkmarkColor: AppColors.textDark,
                     label: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -92,7 +94,7 @@ class MatchFilterChips extends StatelessWidget {
                         ),
                       ],
                     ),
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppColors.background,
                     selectedColor: AppColors.background,
                     side:
                         const BorderSide(color: AppColors.textDark, width: 1),
@@ -120,6 +122,7 @@ class MatchFilterChips extends StatelessWidget {
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
         selected: locationChanged,
+        checkmarkColor: AppColors.textDark,
         label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -139,7 +142,7 @@ class MatchFilterChips extends StatelessWidget {
             ),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         selectedColor: AppColors.background,
         side: const BorderSide(color: AppColors.textDark, width: 1),
         shape: RoundedRectangleBorder(

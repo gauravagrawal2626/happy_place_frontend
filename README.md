@@ -18,6 +18,8 @@ Copy `.env.example` to `.env` in the project root and set values as needed. **Do
 | `POSTHOG_API_CLIENT_KEY` | No       | PostHog project API key. If unset, analytics is a no-op. |
 | `POSTHOG_HOST`           | No       | PostHog ingest host (e.g. `https://us.i.posthog.com`). Defaults to US cloud if unset. |
 
+- **Lister Places autocomplete:** No `types=address` (broader POI/geocode like Maps), `components=country:in` + `region=in` for India, up to 10 suggestions. Selected chip shows Google **`formatted_address`** (same source as pin text in many Maps flows), not only parsed `locality`/`city`.
+
 \*Required only if you want LinkedIn login to work in that environment. The app will fail LinkedIn auth if these are missing.
 
 ### Analytics (PostHog)
@@ -497,9 +499,10 @@ true → /home
 
 #### Matches API (backend contract) – one endpoint for both SEEKER and LISTER
 
-- **Endpoint:** `GET /api/flats/matches` (same for both roles; backend uses auth to decide response type).
-- **Caller:** Frontend calls from Seeker Map (SEEKER) or Lister List (LISTER). See `MatchingRepository.getMatches()` and `ApiConfig.matches`.
-- **Query params we actually send:** only **`radius_km`** (e.g. `5.0`). No optional params are passed (no `flat_id`, `latitude`, `longitude`, `skip`, `limit`, `listing_type`, `min_rent`, `max_rent`). Backend infers role from auth; LISTER can auto-select latest flat when `flat_id` is omitted.
+- **Endpoint:** `GET /api/flats/matches` (same for both roles; backend uses auth to decide response type). **Base URL:** `ApiConfig.baseUrl` + path (see [`lib/core/config/api_config.dart`](lib/core/config/api_config.dart) — e.g. `http://<host>:8000/api/flats/matches`).
+- **Filtered matches:** `POST /api/flats/matches` with JSON body (`filters`, optional `location_overrides`) + same query params as GET. See `MatchingRepository.postMatches()`.
+- **Caller:** Seeker Map / Lister List / filters — [`MatchingRepository`](lib/features/matching/repository/matching_repository.dart), constant [`kDefaultMatchesLimit`](lib/features/matching/model/match_model.dart) (**50** until pagination UI).
+- **Query params sent (typical):** `radius_km` (e.g. `5.0`), **`limit`** (default **50**), `skip` when paginating. Optional: `flat_id`, `latitude`, `longitude`, `listing_type`, `min_rent`, `max_rent`. Backend infers role from auth; LISTER can auto-select latest flat when `flat_id` is omitted.
 - **Response:** `{ results: [...], total, skip, limit, type: "flats" | "seekers", locations_searched? }`.
 - **Public profile:** In both response types, **`user_id`** is the field used for fetching public profile (`GET /api/users/{user_id}/public-profile`).
 

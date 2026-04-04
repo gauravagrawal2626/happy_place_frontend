@@ -463,7 +463,7 @@ class _PreferencesEditContent extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           GestureDetector(
-            onTap: () => context.pop(),
+            onTap: () => context.pop(false),
             child: const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text(

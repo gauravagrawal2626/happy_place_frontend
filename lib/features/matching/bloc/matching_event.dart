@@ -3,6 +3,7 @@
 /// Events for fetching and managing matches
 
 import '../model/filter_model.dart';
+import '../model/match_model.dart';
 
 abstract class MatchingEvent {}
 
@@ -24,7 +25,7 @@ class LoadMatches extends MatchingEvent {
     this.latitude,
     this.longitude,
     this.skip = 0,
-    this.limit = 20,
+    this.limit = kDefaultMatchesLimit,
     this.listingType,
     this.minRent,
     this.maxRent,
@@ -68,6 +69,6 @@ class PostFilteredMatches extends MatchingEvent {
     required this.filters,
     this.locationOverrides,
     this.skip = 0,
-    this.limit = 20,
+    this.limit = kDefaultMatchesLimit,
   });
 }

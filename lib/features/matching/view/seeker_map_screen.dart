@@ -387,8 +387,9 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
                         screenName: AnalyticsScreenNames.seekerMap,
                       ),
                 );
-                await context.push('/preferences/edit');
-                if (mounted) _reloadAll(context);
+                final reloadPrefs =
+                    await context.push<bool?>('/preferences/edit') ?? true;
+                if (mounted && reloadPrefs) _reloadAll(context);
               },
               onRightPressed: () async {
                 unawaited(
@@ -397,8 +398,10 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
                         screenName: AnalyticsScreenNames.seekerMap,
                       ),
                 );
-                await context.push('/flat-requirements', extra: true);
-                if (mounted) _reloadAll(context);
+                final reloadFlat =
+                    await context.push<bool?>('/flat-requirements', extra: true) ??
+                        true;
+                if (mounted && reloadFlat) _reloadAll(context);
               },
             ),
           ),
@@ -451,7 +454,7 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
           children: [
             Expanded(
               child: Text(
-                '$totalMatches potential flatmates found within 5 kms',
+                '$totalMatches flatmate${totalMatches == 1 ? '' : 's'} found',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,

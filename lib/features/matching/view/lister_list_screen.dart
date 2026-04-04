@@ -112,7 +112,6 @@ class _ListerListScreenState extends State<_ListerListContent> {
         if (state is MatchFiltersLoaded) {
           setState(() {
             _questionFilters = state.filtersResponse.questionFilters;
-            // Initialize active filters from currentValue defaults
             _activeFilters = {};
             for (final f in _questionFilters) {
               if (f.currentValue != null) {
@@ -209,8 +208,9 @@ class _ListerListScreenState extends State<_ListerListContent> {
                                 screenName: AnalyticsScreenNames.listerList,
                               ),
                         );
-                        await context.push('/preferences/edit');
-                        if (mounted) _reloadAll(context);
+                        final reloadPrefs =
+                            await context.push<bool?>('/preferences/edit') ?? true;
+                        if (mounted && reloadPrefs) _reloadAll(context);
                       },
                       onRightPressed: () async {
                         unawaited(
@@ -219,8 +219,11 @@ class _ListerListScreenState extends State<_ListerListContent> {
                                 screenName: AnalyticsScreenNames.listerList,
                               ),
                         );
-                        await context.push('/flat-requirements', extra: true);
-                        if (mounted) _reloadAll(context);
+                        final reloadFlat =
+                            await context
+                                    .push<bool?>('/flat-requirements', extra: true) ??
+                                true;
+                        if (mounted && reloadFlat) _reloadAll(context);
                       },
                     ),
                   ),
@@ -270,7 +273,7 @@ class _ListerListScreenState extends State<_ListerListContent> {
           children: [
             Expanded(
               child: Text(
-                '$totalMatches potential flatmates found within 5 kms',
+                '$totalMatches flatmate${totalMatches == 1 ? '' : 's'} found',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

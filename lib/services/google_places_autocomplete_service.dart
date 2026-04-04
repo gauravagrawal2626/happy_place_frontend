@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart' as latlong2;
 
@@ -9,6 +8,13 @@ import 'location_autocomplete_service.dart';
 
 /// Google Places Autocomplete + Place Details via REST.
 /// Uses [EnvConfig.placesApiKeyForCurrentPlatform] (iOS: PLACES_API_KEY, Android: PLACES_API_KEY_ANDROID).
+///
+/// Autocomplete does **not** set `types=address` so results include establishments and geocode
+/// predictions closer to Google Maps search, not only street addresses.
+///
+/// Country scope uses `components=country:in` and `region=in` (India-wide). No fixed city
+/// `location`/`radius`: Autocomplete max radius is 50 km, so a single point cannot fairly bias
+/// all of India; omitting avoids skewing Mumbai/Delhi/etc. toward one city.
 class GooglePlacesAutocompleteService {
   static const String _autocompleteUrl =
       'https://maps.googleapis.com/maps/api/place/autocomplete/json';
@@ -27,7 +33,8 @@ class GooglePlacesAutocompleteService {
       final uri = Uri.parse(_autocompleteUrl).replace(queryParameters: {
         'input': query,
         'key': _apiKey!,
-        'types': 'address',
+        'components': 'country:in',
+        'region': 'in',
       });
       final response = await http.get(uri);
       if (response.statusCode != 200) return [];
@@ -36,9 +43,6 @@ class GooglePlacesAutocompleteService {
 
       final status = data['status'] as String?;
       if (status != 'OK' && status != 'ZERO_RESULTS') {
-        // e.g. REQUEST_DENIED, INVALID_REQUEST, OVER_QUERY_LIMIT
-        final msg = data['error_message'] as String?;
-        debugPrint('Places Autocomplete: status=$status${msg != null ? ', error_message=$msg' : ''}');
         return [];
       }
 
@@ -67,7 +71,8 @@ class GooglePlacesAutocompleteService {
     try {
       final uri = Uri.parse(_detailsUrl).replace(queryParameters: {
         'place_id': placeId,
-        'fields': 'geometry,address_components,formatted_address',
+        // `name` helps when the place is a POI; `formatted_address` is the line Maps shows for addresses.
+        'fields': 'geometry,address_components,formatted_address,name',
         'key': _apiKey!,
       });
       final response = await http.get(uri);
@@ -76,8 +81,6 @@ class GooglePlacesAutocompleteService {
       if (data == null) return null;
       final detailsStatus = data['status'] as String?;
       if (detailsStatus != 'OK') {
-        final msg = data['error_message'] as String?;
-        debugPrint('Places Details: status=$detailsStatus${msg != null ? ', error_message=$msg' : ''}');
         return null;
       }
       final result = data['result'] as Map<String, dynamic>?;
