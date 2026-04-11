@@ -97,3 +97,8 @@ coverage/
 
 android/key.properties
 *.jks
+
+# Firebase / Google services (contain project identifiers; keep local or inject in CI)
+android/app/google-services.json
+ios/GoogleService-Info.plist
+ios/Runner/GoogleService-Info.plist

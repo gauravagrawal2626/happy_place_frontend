@@ -851,5 +851,65 @@ Google OAuth login alongside existing LinkedIn login. Uses `google_sign_in` pack
 
 ---
 
-**Last Updated:** 2026-03-02
-**Current Phase:** Phase 6 (Matches API Integration) + Match Question Filters + Seeker Location Filter + Google Sign-In
+### Push Notifications — FCM (Added)
+
+Firebase Cloud Messaging integration for receiving push notifications on Android and iOS.
+
+#### Firebase Setup (Manual):
+- Firebase project: `happyplace-logging`
+- Android: `google-services.json` in `android/app/` (gitignored)
+- iOS: `GoogleService-Info.plist` in `ios/` (gitignored, added to Xcode project)
+- APNs Auth Key (.p8) uploaded to Firebase Console (covers both dev and prod)
+- iOS capabilities: Push Notifications + Background Modes (Remote notifications)
+
+#### Notification Handling by App State:
+- **Foreground** (app open): `onMessage` listener shows in-app SnackBar with "View" action
+- **Background** (app minimized): OS shows notification; tap handled by `onMessageOpenedApp` → navigates
+- **Terminated** (app closed): OS shows notification; `getInitialMessage()` on next launch → navigates
+
+#### Token Lifecycle:
+- FCM token fetched after user authenticates → `POST /api/notifications/register-token` with `{ "fcm_token": "...", "platform": "android|ios" }` (backend infers user from JWT)
+- Token refresh listened to and re-registered automatically
+- On logout: FCM token deleted from device + local storage cleaned up
+
+#### Navigation (from notification tap):
+- Backend sends `data.screen` field: `"seeker_home"` → `/map/seeker`, `"lister_home"` → `/list/lister`
+- Default fallback: `/map/seeker`
+
+#### Backend Payload Format:
+```json
+{
+  "notification": { "title": "...", "body": "..." },
+  "data": {
+    "type": "new_match | invite_received | ...",
+    "screen": "seeker_home | lister_home",
+    "entity_id": "optional_resource_id"
+  },
+  "android": { "priority": "high" },
+  "apns": { "headers": { "apns-priority": "10" } }
+}
+```
+
+#### API Endpoint:
+- `POST /api/notifications/register-token` — register/update device FCM token (requires JWT auth)
+
+#### Files Created:
+- `lib/core/notifications/notification_service.dart` — singleton FCM service
+
+#### Files Modified:
+- `pubspec.yaml` — added `firebase_core`, `firebase_messaging`
+- `android/settings.gradle.kts` — added `com.google.gms.google-services` plugin
+- `android/app/build.gradle.kts` — applied Google Services plugin
+- `android/app/src/main/AndroidManifest.xml` — added `POST_NOTIFICATIONS` permission
+- `lib/core/storage/storage_keys.dart` — added `fcmToken` key
+- `lib/core/config/api_config.dart` — added `registerNotificationToken` endpoint
+- `lib/main.dart` — Firebase init, background handler, notification service wiring with AppBloc
+- `.gitignore` — added `google-services.json`, `GoogleService-Info.plist`
+
+#### Backend Requirement:
+- `POST /api/notifications/register-token` — store `fcm_token` + `platform` per authenticated user. Use FCM Admin SDK to send notifications.
+
+---
+
+**Last Updated:** 2026-04-05
+**Current Phase:** Phase 6 (Matches API Integration) + Match Question Filters + Seeker Location Filter + Google Sign-In + Push Notifications (FCM)

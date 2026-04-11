@@ -54,6 +54,10 @@ dependencies:
   # Google Sign-In
   google_sign_in: ^6.2.1
 
+  # Firebase (push notifications)
+  firebase_core: ^3.12.1
+  firebase_messaging: ^15.2.5
+
   # Env variables (e.g. PLACES_API_KEY)
   flutter_dotenv: ^5.1.0
   posthog_flutter: ^5.0.0

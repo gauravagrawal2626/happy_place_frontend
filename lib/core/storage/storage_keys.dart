@@ -19,5 +19,8 @@ class StorageKeys {
 
   // App state
   static const String isFirstLaunch = 'is_first_launch';
+
+  // Push notifications
+  static const String fcmToken = 'fcm_token';
 }
 

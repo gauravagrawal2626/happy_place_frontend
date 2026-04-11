@@ -41,6 +41,9 @@ class ApiConfig {
   static const String sendOTP = '/api/auth/send-otp';
   static const String verifyOTP = '/api/auth/verify-otp';
   
+  // Notification Endpoints
+  static const String registerNotificationToken = '/api/notifications/register-token';
+  
   // Request timeout
   static const Duration timeout = Duration(seconds: 30);
 }
