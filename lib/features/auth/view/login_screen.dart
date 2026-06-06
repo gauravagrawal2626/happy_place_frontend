@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:linkedin_login/linkedin_login.dart';
@@ -26,6 +27,9 @@ import '../bloc/linkedin_auth_state.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
+  static bool get _showDevLogin =>
+      kDebugMode && !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
@@ -49,7 +53,9 @@ class LoginScreen extends StatelessWidget {
           builder: (context, state) {
             final isLinkedInLoading = state is LinkedInAuthLoading;
             final isGoogleLoading = state is GoogleAuthLoading;
-            final anyLoading = isLinkedInLoading || isGoogleLoading;
+            final isDevLoading = state is DevAuthLoading;
+            final anyLoading =
+                isLinkedInLoading || isGoogleLoading || isDevLoading;
             
             return SafeArea(
               child: LayoutBuilder(
@@ -96,6 +102,17 @@ class LoginScreen extends StatelessWidget {
                               isLoading: isGoogleLoading,
                               onTap: anyLoading ? null : () => _handleGoogleLogin(context),
                             ),
+
+                            if (_showDevLogin) ...[
+                              const SizedBox(height: 14),
+                              AppButton.auth(
+                                label: 'Dev Login (Simulator)',
+                                isLoading: isDevLoading,
+                                onTap: anyLoading
+                                    ? null
+                                    : () => _handleDevLogin(context),
+                              ),
+                            ],
                             
                             const SizedBox(height: 24),
                             
@@ -153,6 +170,10 @@ class LoginScreen extends StatelessWidget {
           ),
     );
     context.read<LinkedInAuthBloc>().add(GoogleLoginRequested());
+  }
+
+  void _handleDevLogin(BuildContext context) {
+    context.read<LinkedInAuthBloc>().add(DevLoginRequested());
   }
 
   void _handleLinkedInLogin(BuildContext context) {

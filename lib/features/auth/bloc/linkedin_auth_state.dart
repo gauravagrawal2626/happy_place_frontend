@@ -9,6 +9,8 @@ class LinkedInAuthLoading extends LinkedInAuthState {}
 
 class GoogleAuthLoading extends LinkedInAuthState {}
 
+class DevAuthLoading extends LinkedInAuthState {}
+
 class LinkedInAuthSuccess extends LinkedInAuthState {
   final AppLinkedInUser user;
   final AuthResponse authResponse; // JWT token + user info from backend

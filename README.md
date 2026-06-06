@@ -678,6 +678,40 @@ Response:
 }
 ```
 
+#### Dev login (iOS debug / simulator)
+
+When LinkedIn/Google OAuth is unavailable (e.g. iOS simulator), a **Dev Login (Simulator)** button appears on the login screen in **debug iOS builds only** (`kDebugMode`, not release, not Android).
+
+**Request** (same endpoint):
+
+```json
+POST /api/auth/login
+{
+  "provider": "google",
+  "auth_token": "simulator",
+  "dev_user": true
+}
+```
+
+`provider` and `auth_token` are dummy values; only `dev_user: true` matters.
+
+**Response:** Same as normal login. Frontend saves `token`, `user_id`, `email`, `role`, etc. and sends `Authorization: Bearer <token>` on protected APIs.
+
+**Backend prerequisites:**
+
+- `DEV_MOCK_AUTH_ENABLED=true` in backend `.env`
+- Backend restarted after env change
+- User `gauravagrawal.2626@gmail.com` must exist in MongoDB
+
+**Errors:**
+
+- `403` — dev login disabled (`DEV_MOCK_AUTH_ENABLED` off)
+- `404` — dev user not in DB
+
+**Production:** Do not send `dev_user: true`; use normal LinkedIn/Google OAuth. The dev button is stripped in release builds.
+
+**Frontend:** `AuthRepository.loginWithDevMock()` → `LinkedInAuthBloc` `DevLoginRequested` → `login_screen.dart` (iOS debug button).
+
 ### Onboarding
 
 **GET /api/questions/onboarding**
@@ -861,6 +895,7 @@ Firebase Cloud Messaging integration for receiving push notifications on Android
 - iOS: `GoogleService-Info.plist` in `ios/` (gitignored, added to Xcode project)
 - APNs Auth Key (.p8) uploaded to Firebase Console (covers both dev and prod)
 - iOS capabilities: Push Notifications + Background Modes (Remote notifications)
+- **APNs entitlement:** `Runner/Runner.entitlements` → `aps-environment` = **development** (Debug). `Runner/RunnerRelease.entitlements` → **production** (Release + Profile). Archives / TestFlight use Release → production APNs.
 
 #### Notification Handling by App State:
 - **Foreground** (app open): `onMessage` listener shows in-app SnackBar with "View" action
@@ -895,12 +930,14 @@ Firebase Cloud Messaging integration for receiving push notifications on Android
 
 #### Files Created:
 - `lib/core/notifications/notification_service.dart` — singleton FCM service
+- `ios/Runner/RunnerRelease.entitlements` — `aps-environment` = production for Release / Profile / Archive
 
 #### Files Modified:
 - `pubspec.yaml` — added `firebase_core`, `firebase_messaging`
 - `android/settings.gradle.kts` — added `com.google.gms.google-services` plugin
 - `android/app/build.gradle.kts` — applied Google Services plugin
 - `android/app/src/main/AndroidManifest.xml` — added `POST_NOTIFICATIONS` permission
+- `ios/Runner.xcodeproj/project.pbxproj` — Debug → `Runner.entitlements`; Release + Profile → `RunnerRelease.entitlements`
 - `lib/core/storage/storage_keys.dart` — added `fcmToken` key
 - `lib/core/config/api_config.dart` — added `registerNotificationToken` endpoint
 - `lib/main.dart` — Firebase init, background handler, notification service wiring with AppBloc

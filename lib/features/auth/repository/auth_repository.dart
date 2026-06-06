@@ -119,6 +119,49 @@ class AuthRepository {
     }
   }
 
+  /// Dev mock login (iOS debug only — UI gated with kDebugMode).
+  ///
+  /// POST /api/auth/login with dev_user: true. Backend must have
+  /// DEV_MOCK_AUTH_ENABLED=true and the dev user in MongoDB.
+  Future<AuthResult> loginWithDevMock() async {
+    _log('Dev mock login');
+
+    final response = await _apiClient.post(
+      ApiConfig.authLogin,
+      body: {
+        'provider': 'google',
+        'auth_token': 'simulator',
+        'dev_user': true,
+      },
+    );
+
+    if (response.isSuccess && response.data != null) {
+      try {
+        final authResponse = AuthResponse.fromJson(response.data);
+        _log('Dev mock auth successful: ${authResponse.fullName}');
+        _apiClient.setAuthToken(authResponse.token);
+        return AuthResult.success(authResponse);
+      } catch (e) {
+        _log('Failed to parse dev login response: $e');
+        return AuthResult.failure('Failed to parse auth response: $e');
+      }
+    }
+
+    if (response.statusCode == 403) {
+      return AuthResult.failure(
+        'Dev login disabled on backend (DEV_MOCK_AUTH_ENABLED=false)',
+      );
+    }
+    if (response.statusCode == 404) {
+      return AuthResult.failure(
+        'Dev user not found in DB (gauravagrawal.2626@gmail.com)',
+      );
+    }
+
+    _log('Dev mock login failed: ${response.errorMessage}');
+    return AuthResult.failure(response.errorMessage ?? 'Dev login failed');
+  }
+
   /// Logout - clear token and storage
   Future<void> logout() async {
     _log('Logging out - clearing auth data...');
