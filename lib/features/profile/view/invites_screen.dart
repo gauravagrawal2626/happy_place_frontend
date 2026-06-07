@@ -14,6 +14,7 @@ import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_state.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/profile_modal.dart';
+import '../../chat/utils/chat_navigation.dart';
 import '../model/request_model.dart';
 import '../repository/requests_repository.dart';
 
@@ -217,6 +218,7 @@ class _InvitesScreenState extends State<InvitesScreen> {
         : 'Unknown';
     final btn = item.buttonInfo;
     final hasAction = btn.action != null && btn.action!.trim().isNotEmpty;
+    final canMessage = isChatEligibleRequestStatus(item.status);
 
     return Material(
       color: Colors.white,
@@ -247,6 +249,22 @@ class _InvitesScreenState extends State<InvitesScreen> {
                   ),
                 ),
               ),
+              if (canMessage) ...[
+                TextButton(
+                  onPressed: () => openChatForRequest(context, item.id),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.info,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'Message',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(

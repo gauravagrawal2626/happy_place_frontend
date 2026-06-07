@@ -31,6 +31,7 @@ abstract final class AnalyticsButtonNames {
   static const String mapFlatmatePreference = 'map_flatmate_preference';
   static const String mapAddFlatDetails = 'map_add_flat_details';
   static const String bottomNavSearchResults = 'bottom_nav_search_results';
+  static const String bottomNavChat = 'bottom_nav_chat';
   static const String bottomNavAccount = 'bottom_nav_account';
 
   /// Finding matches loading screen

@@ -1,21 +1,24 @@
 /// App Bottom Navigation Bar
-/// 
-/// Shared bottom navigation bar used in both SEEKER and LISTER screens.
-/// Contains 2 tabs: Search results, Account
+///
+/// Shared bottom navigation used on SEEKER and LISTER main screens.
+/// Tabs: Search (0), Chat (1), Account (2).
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class AppBottomNav extends StatelessWidget {
-  final int currentIndex; // 0: Search results, 1: Account
+  /// 0: Search, 1: Chat, 2: Account
+  final int currentIndex;
   final VoidCallback? onResultsTap;
+  final VoidCallback? onChatTap;
   final VoidCallback? onAccountTap;
 
   const AppBottomNav({
     super.key,
     required this.currentIndex,
     this.onResultsTap,
+    this.onChatTap,
     this.onAccountTap,
   });
 
@@ -24,13 +27,13 @@ class AppBottomNav extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.35),
                 borderRadius: BorderRadius.circular(30),
@@ -41,26 +44,35 @@ class AppBottomNav extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Icon(
-                      Icons.map_outlined,
-                      color: currentIndex == 0 ? AppColors.textDark : Colors.grey[500],
-                      size: 24,
+                  if (currentIndex == 0)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, right: 4),
+                      child: Icon(
+                        Icons.map_outlined,
+                        color: AppColors.textDark,
+                        size: 22,
+                      ),
                     ),
-                  ),
                   Expanded(
                     child: _buildNavItem(
-                      label: 'Search results',
+                      label: 'Search',
                       isSelected: currentIndex == 0,
                       onTap: onResultsTap ?? () {},
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 2),
+                  Expanded(
+                    child: _buildNavItem(
+                      label: 'Chat',
+                      isSelected: currentIndex == 1,
+                      onTap: onChatTap ?? () {},
+                    ),
+                  ),
+                  const SizedBox(width: 2),
                   Expanded(
                     child: _buildNavItem(
                       label: 'Account',
-                      isSelected: currentIndex == 1,
+                      isSelected: currentIndex == 2,
                       onTap: onAccountTap ?? () {},
                     ),
                   ),
@@ -81,7 +93,7 @@ class AppBottomNav extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.background.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(25),
@@ -96,7 +108,7 @@ class AppBottomNav extends StatelessWidget {
                 size: 8,
                 color: AppColors.background,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
             ],
             Flexible(
               child: Text(
@@ -104,7 +116,7 @@ class AppBottomNav extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   color: isSelected ? AppColors.background : AppColors.textDark,
                 ),

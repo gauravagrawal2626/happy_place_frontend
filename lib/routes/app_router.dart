@@ -17,6 +17,8 @@ import '../features/location/view/lister_location_screen.dart';
 import '../features/flat_requirements/view/flat_requirements_screen.dart';
 import '../features/preferences/view/preferences_edit_screen.dart';
 import '../features/profile/view/invites_screen.dart';
+import '../features/chat/view/conversations_list_screen.dart';
+import '../features/chat/view/chat_screen.dart';
 
 /// App Router with Auth Guards
 /// 
@@ -127,6 +129,22 @@ GoRouter createRouter(
       GoRoute(
         path: '/account/invites',
         builder: (context, state) => const InvitesScreen(),
+      ),
+      // Chat inbox (Chat tab)
+      GoRoute(
+        path: '/chats',
+        builder: (context, state) => const ConversationsListScreen(),
+      ),
+      GoRoute(
+        path: '/chat/:conversationId',
+        builder: (context, state) {
+          final conversationId = state.pathParameters['conversationId'] ?? '';
+          final name = state.uri.queryParameters['name'] ?? 'Chat';
+          return ChatScreen(
+            conversationId: conversationId,
+            otherPersonName: Uri.decodeComponent(name),
+          );
+        },
       ),
       // Finding Matches screen (shared by location and flat details flows)
       GoRoute(
@@ -259,6 +277,13 @@ String? _handleRedirect(AppState appState, GoRouterState state) {
       }
       // Allow invites screen (from account modal)
       if (currentPath == '/account/invites') {
+        return null;
+      }
+      // Allow chat inbox (Chat tab)
+      if (currentPath == '/chats') {
+        return null;
+      }
+      if (currentPath.startsWith('/chat/')) {
         return null;
       }
       // Allow finding matches screen

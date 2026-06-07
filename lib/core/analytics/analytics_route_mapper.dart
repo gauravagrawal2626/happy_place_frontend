@@ -20,6 +20,8 @@ String mapRouteNameToScreenName(String? routeName) {
   if (path == '/flat-requirements') return AnalyticsScreenNames.flatRequirements;
   if (path == '/preferences/edit') return AnalyticsScreenNames.preferencesEdit;
   if (path == '/account/invites') return AnalyticsScreenNames.invites;
+  if (path == '/chats') return AnalyticsScreenNames.conversationsList;
+  if (path.startsWith('/chat/')) return AnalyticsScreenNames.chatThread;
   if (path.startsWith('/finding-matches')) {
     return AnalyticsScreenNames.findingMatches;
   }

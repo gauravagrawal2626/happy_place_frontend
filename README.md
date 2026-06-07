@@ -42,6 +42,14 @@ API calls use the `ApiConfig.baseUrl` in `lib/core/config/api_config.dart`.
 
 To switch environments, change `baseUrl` and rebuild the app.
 
+### Chat API (frontend)
+
+- **Nav:** Bottom bar `Search | Chat | Account` on map/list screens. Chat tab → `/chats`.
+- **REST** (`ChatRepository`, JWT via `ApiClient`): `GET /api/conversations`, `GET /api/conversations/by-request/{id}`, `GET/POST /api/conversations/{id}/messages`, `GET /api/conversations/{id}/ably-token`.
+- **Ably:** Subscribe-only on `conversation:{id}`, event `new_message`. Token via `GET /api/conversations/{id}/ably-token`. No API key in app.
+- **Nav:** `/chats` inbox, `/chat/:id?name=` thread. Invites **Message** on ACCEPTED/COMPLETED → `by-request`.
+- **Code:** `lib/features/chat/`. Backend list may return bare `[]` or `{ conversations, total }` — both parsed.
+
 ---
 
 ## 📋 Project Phases

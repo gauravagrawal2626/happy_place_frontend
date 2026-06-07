@@ -4,9 +4,9 @@
 /// Change baseUrl based on environment (local/staging/production).
 class ApiConfig {
   // Local: For iOS Simulator use 127.0.0.1; Android Emulator use 10.0.2.2; real device use machine IP
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  // static const String baseUrl = 'http://127.0.0.1:8000';
   // Dev backend (remote)
-  // static const String baseUrl = 'http://13.126.87.95:8000';
+  static const String baseUrl = 'http://13.126.87.95:8000';
   
   // API Endpoints
   static const String authLogin = '/api/auth/login';
@@ -36,6 +36,14 @@ class ApiConfig {
   // Profile & Requests Endpoints
   static String publicProfile(String userId) => '/api/users/$userId/public-profile';
   static const String requests = '/api/requests';
+
+  // Chat Endpoints
+  static const String conversations = '/api/conversations';
+  static String conversationByRequest(String requestId) =>
+      '/api/conversations/by-request/$requestId';
+  static String conversation(String id) => '/api/conversations/$id';
+  static String conversationMessages(String id) => '/api/conversations/$id/messages';
+  static String conversationAblyToken(String id) => '/api/conversations/$id/ably-token';
   
   // Phone Verification Endpoints
   static const String sendOTP = '/api/auth/send-otp';

@@ -24,6 +24,7 @@ import 'features/preferences/repository/preferences_repository.dart';
 import 'features/matching/repository/matching_repository.dart';
 import 'features/profile/repository/profile_repository.dart';
 import 'features/profile/repository/requests_repository.dart';
+import 'features/chat/repository/chat_repository.dart';
 import 'routes/app_router.dart';
 import 'shared/theme/app_colors.dart';
 
@@ -110,6 +111,9 @@ class _MyAppState extends State<MyApp> {
         ),
         RepositoryProvider<RequestsRepository>(
           create: (context) => RequestsRepository(apiClient: _authRepository.apiClient),
+        ),
+        RepositoryProvider<ChatRepository>(
+          create: (context) => ChatRepository(apiClient: _authRepository.apiClient),
         ),
       ],
         child: Builder(

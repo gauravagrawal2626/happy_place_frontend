@@ -16,6 +16,8 @@ abstract final class AnalyticsScreenNames {
   static const String flatRequirements = 'flat_requirements';
   static const String preferencesEdit = 'preferences_edit';
   static const String invites = 'invites';
+  static const String conversationsList = 'conversations_list';
+  static const String chatThread = 'chat_thread';
   static const String findingMatches = 'finding_matches';
   /// Account bottom sheet (map / list)
   static const String accountModal = 'account_modal';

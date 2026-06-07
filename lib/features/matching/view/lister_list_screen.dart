@@ -7,9 +7,8 @@ import '../../../core/analytics/analytics_button_names.dart';
 import '../../../core/analytics/analytics_facade.dart';
 import '../../../core/analytics/analytics_screen_names.dart';
 import '../../../shared/theme/app_colors.dart';
-import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/action_buttons_row.dart';
-import '../../../shared/widgets/account_modal.dart';
+import '../../../shared/widgets/main_tab_navigation.dart';
 import '../../../shared/widgets/profile_modal.dart';
 import '../bloc/matching_bloc.dart';
 import '../bloc/matching_event.dart';
@@ -231,30 +230,10 @@ class _ListerListScreenState extends State<_ListerListContent> {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: AppBottomNav(
-                    currentIndex: 0,
-                    onResultsTap: () {
-                      unawaited(
-                        context.read<AnalyticsFacade>().button(
-                              AnalyticsButtonNames.bottomNavSearchResults,
-                              screenName: AnalyticsScreenNames.listerList,
-                            ),
-                      );
-                    },
-                    onAccountTap: () {
-                      unawaited(
-                        context.read<AnalyticsFacade>().button(
-                              AnalyticsButtonNames.bottomNavAccount,
-                              screenName: AnalyticsScreenNames.listerList,
-                            ),
-                      );
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => const AccountModalWithBlur(),
-                      );
-                    },
+                  child: buildMainBottomNav(
+                    context,
+                    currentTab: MainTabIndex.search,
+                    screenName: AnalyticsScreenNames.listerList,
                   ),
                 ),
               ],

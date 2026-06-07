@@ -2,6 +2,7 @@
 /// Frame 53 design: rows with avatar, name, "View Profile" (blue outline) or "Accepted" (filled blue); subtext for Accepted.
 
 import 'package:flutter/material.dart';
+import '../../../features/chat/utils/chat_navigation.dart';
 import '../../../features/profile/model/request_model.dart';
 import '../../theme/app_colors.dart';
 
@@ -97,6 +98,7 @@ class _InviteRow extends StatelessWidget {
         ? item.personDetails.fullName
         : 'Unknown';
     final isAccepted = _isAccepted;
+    final canMessage = isChatEligibleRequestStatus(item.status);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,6 +131,22 @@ class _InviteRow extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (canMessage) ...[
+                    TextButton(
+                      onPressed: () => openChatForRequest(context, item.id),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.info,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Message',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   _Button(
                     text: item.buttonInfo.text,
                     isAccepted: isAccepted,

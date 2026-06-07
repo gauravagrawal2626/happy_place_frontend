@@ -11,9 +11,8 @@ import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_event.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../shared/theme/app_colors.dart';
-import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/action_buttons_row.dart';
-import '../../../shared/widgets/account_modal.dart';
+import '../../../shared/widgets/main_tab_navigation.dart';
 import '../../../shared/widgets/profile_modal.dart';
 import '../../home/widgets/real_map_widget.dart';
 import '../../profile/repository/profile_repository.dart';
@@ -409,30 +408,10 @@ class _SeekerMapScreenState extends State<_SeekerMapContent> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: AppBottomNav(
-              currentIndex: 0,
-              onResultsTap: () {
-                unawaited(
-                  context.read<AnalyticsFacade>().button(
-                        AnalyticsButtonNames.bottomNavSearchResults,
-                        screenName: AnalyticsScreenNames.seekerMap,
-                      ),
-                );
-              },
-              onAccountTap: () {
-                unawaited(
-                  context.read<AnalyticsFacade>().button(
-                        AnalyticsButtonNames.bottomNavAccount,
-                        screenName: AnalyticsScreenNames.seekerMap,
-                      ),
-                );
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const AccountModalWithBlur(),
-                );
-              },
+            child: buildMainBottomNav(
+              context,
+              currentTab: MainTabIndex.search,
+              screenName: AnalyticsScreenNames.seekerMap,
             ),
           ),
         ],
